@@ -123,12 +123,65 @@ const LEGAL = {
   }
 };
 
+// Turn the flat <h2>version</h2><p>notes</p> patch list into an accordion:
+// each version becomes a tappable header with its notes collapsed beneath it.
+// The first (latest) version is expanded by default. Source HTML stays simple
+// (just add an <h2>/<p> pair for a new release); the accordion is applied here.
+function buildPatchAccordion(html) {
+  // split into [version, notes] pairs by the <h2> markers
+  const parts = html.split(/<h2>/).map(s => s.trim()).filter(Boolean);
+  return parts.map((part, i) => {
+    const m = part.match(/^(.*?)<\/h2>\s*([\s\S]*)$/);
+    if (!m) return '';
+    const ver = m[1].trim();
+    const notes = m[2].trim();
+    const open = i === 0 ? ' open' : '';
+    return `<div class="patch-item${open}">
+      <button class="patch-head" onclick="togglePatch(this)" aria-expanded="${i === 0}">
+        <span class="patch-ver">${ver}</span>
+        <span class="patch-chevron">⌄</span>
+      </button>
+      <div class="patch-notes">${notes}</div>
+    </div>`;
+  }).join('');
+}
+
+function togglePatch(btn) {
+  const item = btn.closest('.patch-item');
+  const wasOpen = item.classList.contains('open');
+  // True accordion: close every item first, then open the tapped one (if it
+  // wasn't already open). Tapping an open item just closes it.
+  document.querySelectorAll('.patch-item.open').forEach(el => {
+    el.classList.remove('open');
+    const h = el.querySelector('.patch-head');
+    if (h) h.setAttribute('aria-expanded', 'false');
+  });
+  if (!wasOpen) {
+    item.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    // Smooth-scroll the opened item to the top of the scroll area, matching the
+    // scenario reveal behaviour. Scroll the modal body, not the whole window.
+    // Use rect-difference (robust to the container's padding / offset parent).
+    requestAnimationFrame(() => {
+      const scroller = item.closest('#legalBody');
+      if (scroller) {
+        const delta = item.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+        scroller.scrollTo({ top: scroller.scrollTop + delta, behavior: 'smooth' });
+      } else {
+        item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+  haptic();
+}
+
 function openLegal(key) {
   const doc = LEGAL[key];
   if (!doc) return;
   document.getElementById('legalTitle').textContent = doc.title;
   const body = document.getElementById('legalBody');
-  body.innerHTML = doc.body;
+  // Patch notes render as an accordion; all other docs render as-is.
+  body.innerHTML = key === 'patches' ? buildPatchAccordion(doc.body) : doc.body;
   body.scrollTop = 0;  // always start at top
   const modal = document.getElementById('legalModal');
   modal.classList.add('open');

@@ -1490,7 +1490,7 @@ ul { list-style: none; }
 .scen-reveal-btn:active { transform:scale(.98); }
 .scen-new-btn { background:var(--primary); color:#fff; border:none; }
 .scen-new-btn:active { transform:scale(.98); }
-.scen-reveal { display:flex; flex-direction:column; gap:14px; }
+.scen-reveal { display:flex; flex-direction:column; gap:14px; scroll-margin-top: calc(var(--sbh, env(safe-area-inset-top, 0px)) + 12px); }
 .scen-reveal .scen-sec { border-color:var(--primary); border-width:1.5px; }
 .scen-reveal .scen-sec-title { color:var(--primary); }
 .scen-drugs { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
@@ -1588,3 +1588,27 @@ ul { list-style: none; }
   50% { transform:scale(1.1); opacity:1; }
 }
 .scen-gen-text { font-size:14px; color:var(--text2); font-weight:600; }
+
+/* ─── Patch notes accordion ─────────────────────────────────────────────── */
+.patch-item { border-bottom: 1px solid var(--border); }
+.patch-item:last-child { border-bottom: none; }
+.patch-head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  background: none; border: none; cursor: pointer;
+  padding: var(--sp3) 0; font: inherit; color: var(--text);
+  text-align: left;
+}
+.patch-head:active { opacity: .6; }
+.patch-ver { font-size: var(--text-base); font-weight: 700; color: var(--primary); }
+.patch-chevron {
+  font-size: 18px; color: var(--text2); line-height: 1;
+  transition: transform .2s ease; transform: rotate(0deg);
+}
+.patch-item.open .patch-chevron { transform: rotate(180deg); }
+.patch-notes {
+  display: none;
+  padding: 0 0 var(--sp3) 0;
+  font-size: 14px; color: var(--text2); line-height: 1.55;
+}
+.patch-item.open .patch-notes { display: block; }
+.patch-notes p { margin: 0; }
