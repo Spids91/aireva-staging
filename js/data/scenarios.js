@@ -888,4 +888,94 @@ const PRESENTATIONS = [
       ],
     },
   },
+
+  {
+    id: 'stroke',
+    name: 'Stroke',
+    category: 'Neurological',
+    demographics: { minAge: 45, maxAge: 95, sex: 'any' },
+    variants: [
+      // All conscious. Variants differ by stroke presentation / FAST findings.
+      // Dispatches are scene-based / caller's-words (no "weakness") so the student
+      // performs FAST recognition rather than being handed the cardinal sign.
+      { cause:'right-hemisphere stroke, left-sided weakness', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who has suddenly become unwell down one side.',
+        presentation:'Sudden left-sided facial droop and left arm weakness, slurred speech, alert and frightened. Symptoms began clearly within the last hour.',
+        allergies:'No known drug allergies.',
+        events:'Was well, then suddenly developed a drooping face and a weak arm on the left side; onset time is known and recent.' },
+      { cause:'left-hemisphere stroke, speech affected', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who cannot speak properly.',
+        presentation:'Sudden difficulty speaking and understanding, right-sided facial droop, right arm drift, alert. Clear recent onset.',
+        allergies:'No known drug allergies.',
+        events:'Suddenly unable to get words out and not following conversation; family noted the exact time it started a short while ago.' },
+      { cause:'wake-up stroke, uncertain onset', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who woke up not right this morning.',
+        presentation:'Facial droop and arm weakness noticed on waking, alert. Last known well was the night before, so the onset time is uncertain.',
+        allergies:'No known drug allergies.',
+        events:'Went to bed well and woke with one-sided weakness; cannot say when within the night it started.' },
+      { cause:'transient symptoms, resolving', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT whose family are worried after a sudden change.',
+        presentation:'Had facial droop and arm weakness that is now largely resolved, alert and back to near-normal. FAST now only subtly positive.',
+        allergies:'No known drug allergies.',
+        events:'Sudden weakness and slurred speech that has been improving over the last half hour.' },
+      { cause:'posterior circulation stroke', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who is dizzy and unsteady.',
+        presentation:'Sudden severe dizziness, unsteadiness and visual disturbance, alert. FAST may be subtle, the deficit is balance and coordination.',
+        allergies:'No known drug allergies.',
+        events:'Sudden onset of severe vertigo, double vision and inability to walk straight, recent and clear.' },
+      { cause:'large stroke, severe deficit', conscious:true,
+        dispatch:'You are called to {location} for a drowsy PATIENT whose face has dropped on one side.',
+        presentation:'Drowsy but rousable, obvious facial asymmetry, dense one-sided weakness, slow to respond and airway needs watching. Severe deficit.',
+        allergies:'No known drug allergies.',
+        events:'Sudden onset of one-sided weakness with a facial droop and increasing drowsiness shortly before arrival.' },
+    ],
+    painBased: false,   // stroke is not a pain complaint → OPQRST shows honest negatives
+    deviations: {
+      bpSys: { dir:'up', intensity:0.4 },   // hypertension common in acute stroke (and a risk-factor breadcrumb)
+      bpDia: { dir:'up', intensity:0.4 },
+      // hr/rr/spo2/temp/bgl normal; neuro deficit lives in the presentation text, not the vitals
+    },
+    sample: {
+      symptoms:'Sudden focal neurological deficit (face, arm, speech), or dizziness and ataxia.',
+      medications:'Often anticoagulants, antiplatelets, or antihypertensives.',
+      pmh:'Hypertension, atrial fibrillation, prior stroke or TIA, diabetes.',
+      lastIntake:'Note the last-known-well time, it is relevant to the treatment window.',
+    },
+    opqrst: {
+      onset:'Sudden onset of neurological symptoms (note the time).',
+      provocation:'No pain as the chief complaint; the deficits are constant.',
+      quality:'Neurological deficit (weakness, speech, balance), not pain.',
+      radiates:'No.',
+      severity:'0',
+      time:'Note the time of onset or last known well, this drives the pathway.',
+    },
+    reveal: {
+      diagnosis:'Suspected stroke: an acute neurological deficit. Obtain GCS and perform a FAST assessment. Always check blood glucose, as hypoglycaemia is a stroke mimic. FAST: Face (droop), Arms (drift or weakness), Speech (slurred or difficulty), Time (of onset, the critical variable).',
+      pathway:'Obtain GCS and perform a FAST assessment. If FAST positive, maintain the airway and give oxygen therapy. Check blood glucose; if less than 4 or greater than 20 mmol/L, go to the Glycaemic Emergency CPG. ECG and SpO₂ monitoring. If onset is within 4.5 hours, this is time-critical: assess for a specialised stroke unit and transport under local protocol. If onset is over 4.5 hours or uncertain, transport to an appropriate hospital per local protocol. Pre-alert the receiving unit and document the last-known-well time accurately.',
+      interventions:'Obtain GCS; perform FAST; establish the time of onset or last known well. Maintain the airway; oxygen therapy if indicated. Check blood glucose to exclude hypoglycaemia as a mimic. ECG and SpO₂ monitoring. Time-critical transport to a specialised stroke unit per local protocol if within the window; pre-alert.',
+      diagnosisBlocks: [
+        { type:'lead', body:'Suspected stroke: an acute neurological deficit. Obtain GCS and perform a FAST assessment. Always check blood glucose, as hypoglycaemia is a stroke mimic.' },
+        { type:'note', label:'FAST', body:'Face (droop), Arms (drift or weakness), Speech (slurred or difficulty), Time (of onset, the critical variable).' },
+      ],
+      pathwayBlocks: [
+        { type:'lead', body:'Obtain GCS. Perform a FAST assessment.' },
+        { type:'step', body:'If FAST positive, maintain the airway and give oxygen therapy.' },
+        { type:'step', body:'Check blood glucose. If less than 4 or greater than 20 mmol/L, go to the Glycaemic Emergency CPG.' },
+        { type:'step', body:'ECG and SpO₂ monitoring.' },
+        { type:'branch', label:'Onset < 4.5 hours', body:'Time-critical. Assess for a specialised stroke unit and transport under local protocol.' },
+        { type:'branch', label:'Onset > 4.5 hours or uncertain', body:'Transport to an appropriate hospital per local protocol.' },
+        { type:'note', label:'Always', body:'Pre-alert the receiving unit; document the last-known-well time accurately.' },
+      ],
+      interventionsBlocks: [
+        { type:'step', body:'Obtain GCS; perform FAST; establish the time of onset or last known well.' },
+        { type:'step', body:'Maintain the airway; oxygen therapy if indicated.' },
+        { type:'step', body:'Check blood glucose to exclude hypoglycaemia as a mimic.' },
+        { type:'step', body:'ECG and SpO₂ monitoring.' },
+        { type:'step', body:'Time-critical transport to a specialised stroke unit per local protocol if within the window; pre-alert.' },
+      ],
+      drugs: [
+        { name:'Oxygen therapy', adult:{ paramedic:'Maintain the airway; oxygen as indicated.' } },
+      ],
+    },
+  },
 ];
