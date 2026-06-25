@@ -1,4 +1,4 @@
-const C='aireva-20260625084410';
+const C='aireva-20260625092235';
 const BASE='.';
 const ASSETS=[BASE+'/',BASE+'/index.html',BASE+'/manifest.json',BASE+'/css/style.css',
   BASE+'/js/data/medications.js',BASE+'/js/data/hospitals.js',BASE+'/js/data/terms.js',BASE+'/js/data/medref.js',BASE+'/js/data/scenarios.js',
