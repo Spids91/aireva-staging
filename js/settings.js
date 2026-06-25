@@ -41,17 +41,19 @@ const LEGAL = {
       <p>The developer accepts no responsibility for any clinical decisions made on the basis of information contained in this app.</p>
       <h2>4. Limitation of Liability</h2>
       <p>The app is provided "as is" without warranty of any kind, express or implied. The developer does not warrant that the information contained in the app is accurate, complete or current. To the maximum extent permitted by law, the developer shall not be liable for any direct, indirect, incidental or consequential damages arising from your use of or reliance on the app.</p>
-      <h2>5. Third Party Content</h2>
-      <p>Drug information in this app is based on publicly available PHECC 2026 Clinical Practice Guidelines. Aireva Medic is an independent educational tool and is not affiliated with, endorsed by, or approved by PHECC or any other regulatory body.</p>
+      <h2>5. Third Party Content and Source Acknowledgement</h2>
+      <p>The clinical and pharmacology content in this app is derived from the PHECC (Pre-Hospital Emergency Care Council) Clinical Practice Guidelines, which are the copyright of PHECC. This material is reproduced for educational purposes only, with acknowledgement of PHECC as the source, in accordance with PHECC's reproduction terms. Aireva Medic is provided free of charge and is not used for commercial purposes.</p>
+      <p>Aireva Medic is an independent educational tool and is not affiliated with, endorsed by, or approved by PHECC or any other regulatory body. PHECC is acknowledged as the source of the underlying clinical guideline material; it is not the publisher of this app and bears no responsibility for it.</p>
       <h2>6. Age Requirement</h2>
       <p>This app is intended for users aged 16 and over. By using the app you confirm that you meet this age requirement.</p>
       <h2>7. Intellectual Property</h2>
-      <p>The app design, code, quiz content, gamification system and all original content are the intellectual property of the developer and are protected by copyright under Irish law and the Berne Convention. © Keith O'Reilly 2026. All rights reserved.</p>
-      <p>You may not reproduce, distribute or create derivative works from this app without explicit written permission from the developer.</p>
+      <p>The app design, code, user interface, quiz engine, gamification system, and other original works created by the developer are the intellectual property of the developer and are protected by copyright under Irish law and the Berne Convention. © Keith O'Reilly 2026.</p>
+      <p>This ownership does not extend to the underlying clinical guideline content, which is the copyright of PHECC and is used under their educational, non-commercial reproduction terms (see Section 5). The developer claims no ownership over PHECC's guideline material.</p>
+      <p>You may not reproduce, distribute or create derivative works from the app's original (non-PHECC) content without explicit written permission from the developer.</p>
       <h2>8. Modifications</h2>
       <p>The developer reserves the right to modify, suspend or discontinue the app or these terms at any time without notice. Continued use of the app following any changes constitutes acceptance of the updated terms.</p>
-      <h2>9. Monetisation</h2>
-      <p>The app is currently provided free of charge. Future versions or platforms may be subject to a fee, which will be communicated clearly in advance.</p>
+      <h2>9. Always Free</h2>
+      <p>Aireva Medic is and will always be provided free of charge. Users will never be charged to access the app or its content.</p>
       <h2>10. Governing Law</h2>
       <p>These terms are governed by the laws of Ireland. Any disputes arising from your use of the app shall be subject to the exclusive jurisdiction of the Irish courts.</p>
       <p class="legal-meta">Last updated: June 2026 · © Keith O'Reilly 2026</p>`
