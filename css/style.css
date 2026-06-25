@@ -1340,18 +1340,21 @@ ul { list-style: none; }
   position: fixed; bottom: 0; border-radius: 2px;
   /* launch point is the bottom corner; --dx/--dy set per piece in JS */
   animation-name: eggArc;
-  /* ease-out overall: quick launch that decelerates as it rises and fizzles */
-  animation-timing-function: ease-out;
+  /* Single smooth deceleration curve across the whole flight: fast off the
+     corner, easing as it climbs, fading out before it can stall. No mid-keyframe
+     timing-function swaps (those caused the apex pause). */
+  animation-timing-function: cubic-bezier(.18,.66,.32,1);
   animation-iteration-count: 1; animation-fill-mode: forwards;
   will-change: transform, opacity;
 }
 @keyframes eggArc {
-  /* Launch — fast off the corner, decelerating as it climbs (ease-out) */
-  0%   { transform: translate(0, 0) rotate(0); opacity: 1; animation-timing-function: cubic-bezier(.12,.7,.35,1); }
-  /* Still rising and fully visible — linear from here so there's no stall */
-  55%  { transform: translate(calc(var(--dx) * .8), calc(var(--dy) * .8)) rotate(calc(var(--rot) * .7)); opacity: 1; animation-timing-function: linear; }
-  /* Continues drifting upward at a steady pace while fading — no pause at the apex */
-  100% { transform: translate(var(--dx), calc(var(--dy) * 1.35)) rotate(var(--rot)); opacity: 0; }
+  /* Launch — full opacity, at the corner. */
+  0%   { transform: translate(0, 0) rotate(0); opacity: 1; }
+  /* Mid-flight — already most of the way out and starting to fade, so the piece
+     is never bright-but-motionless. Fade leads the movement. */
+  70%  { opacity: .55; }
+  /* Drifts on slightly past the arc while fading fully out — gone before it stalls. */
+  100% { transform: translate(var(--dx), calc(var(--dy) * 1.25)) rotate(var(--rot)); opacity: 0; }
 }
 
 /* ── STREAK FREEZE MODAL (calm announcement, no confetti) ─────────────────── */

@@ -76,15 +76,18 @@ function generateScenario(presId) {
   const pres = presId ? PRESENTATIONS.find(p => p.id === presId) : _pickPresentation();
   if (!pres) return null;
 
-  // 1. Patient within demographic constraints.
-  const lo = pres.demographics.minAge, hi = pres.demographics.maxAge;
+  // 1. Narrative variant (the cause/story). Picked first so it can constrain age.
+  const variant = _pick(pres.variants);
+
+  // 2. Patient within demographic constraints. A variant may raise the minimum age
+  //    via `variant.minAge` (e.g. a Type 2 diabetic should not be a toddler); the
+  //    presentation floor still applies as the baseline.
+  const lo = Math.max(pres.demographics.minAge, variant.minAge || 0);
+  const hi = pres.demographics.maxAge;
   let age;
   if (lo < 2 && Math.random() < 0.25) age = _pick([0, 0.5, 1]);     // occasional infant
   else age = _ri(Math.max(1, Math.ceil(lo)), Math.floor(hi));
   const sex = pres.demographics.sex === 'any' ? _pick(['male', 'female']) : pres.demographics.sex;
-
-  // 2. Narrative variant (the cause/story).
-  const variant = _pick(pres.variants);
 
   // 3. Vitals. Relative vitals (hr/rr/bpSys/bpDia) use age-scaled % shifts; absolute
   //    vitals (spo2/temp/bgl) use direct target ranges; anything omitted stays normal.
