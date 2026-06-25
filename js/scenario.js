@@ -450,13 +450,51 @@ function scenarioChoiceHTML() {
         <span class="scen-cohort-txt"><span class="scen-cohort-name">Mega OSCE</span><span class="scen-cohort-sub">Two or more presentations combined into one station</span></span>
         <span class="scen-cohort-soon-badge">Coming soon</span>
       </button>
+    </div>
+    ${scenarioTimerHTML()}`;
+}
+// Optional countdown timer control (off by default). A toggle enables it; a slider sets
+// the minutes (5 to 15, default 10). The slider only shows when the timer is on.
+function scenarioTimerHTML() {
+  const on = !!G.scenTimerOn;
+  const mins = G.scenTimerMins || 10;
+  return `
+    <div class="scen-timer-ctrl">
+      <label class="scen-timer-row">
+        <span class="scen-timer-label">⏱ Timer</span>
+        <span class="scen-timer-toggle ${on ? 'on' : ''}" id="scenTimerToggle"><span class="scen-timer-knob"></span></span>
+      </label>
+      <div class="scen-timer-slider-wrap" id="scenTimerSliderWrap" style="${on ? '' : 'display:none'}">
+        <input type="range" min="5" max="15" step="1" value="${mins}" id="scenTimerSlider" class="scen-timer-slider">
+        <span class="scen-timer-val" id="scenTimerVal">${mins} min</span>
+      </div>
     </div>`;
+}
+// Wire the timer toggle + slider (call after the choice HTML is in the DOM).
+function wireScenarioTimer() {
+  const toggle = document.getElementById('scenTimerToggle');
+  const sliderWrap = document.getElementById('scenTimerSliderWrap');
+  const slider = document.getElementById('scenTimerSlider');
+  const val = document.getElementById('scenTimerVal');
+  if (toggle) toggle.addEventListener('click', () => {
+    G.scenTimerOn = !G.scenTimerOn;
+    saveG();
+    toggle.classList.toggle('on', G.scenTimerOn);
+    if (sliderWrap) sliderWrap.style.display = G.scenTimerOn ? '' : 'none';
+    haptic();
+  });
+  if (slider) slider.addEventListener('input', () => {
+    G.scenTimerMins = parseInt(slider.value, 10);
+    if (val) val.textContent = G.scenTimerMins + ' min';
+    saveG();
+  });
 }
 // Wire the two cohort buttons after the HTML is in the DOM.
 function wireScenarioChoice() {
   document.getElementById('scenAdultBtn')?.addEventListener('click', () => { openScenarioRunner('adult'); haptic(); });
   document.getElementById('scenPaedsBtn')?.addEventListener('click', () => { showToast('Paediatric scenarios, coming soon'); });
   document.getElementById('scenMegaBtn')?.addEventListener('click', () => { showToast('Mega OSCE, coming soon'); });
+  wireScenarioTimer();
 }
 
 function goScenario() {
@@ -521,6 +559,7 @@ function goScenario() {
     if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
     showToast('Mega OSCE, coming soon');
   });
+  wireScenarioTimer();
 }
 
 // The runner view: the back bar returns to the landing page, and a container the
@@ -529,15 +568,54 @@ function openScenarioRunner(cohort) {
   window.scrollTo({ top: 0, behavior: 'instant' });
   const wrap = document.getElementById('quizTabContent');
   if (!wrap) return;
+  const timerBar = G.scenTimerOn
+    ? `<div class="scen-timer-bar" id="scenTimerBar"><span class="scen-timer-clock" id="scenTimerClock">${_fmtTime((G.scenTimerMins||10)*60)}</span></div>`
+    : '';
   wrap.innerHTML = `
     <div class="quiz-back-sticky" id="scenRunnerBack">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back
     </div>
+    ${timerBar}
     <div id="scenarioContent"></div>`;
   // Back returns to the cohort choice screen (goScenario), so the user can switch
-  // between Adult and Paeds without leaving the feature.
-  document.getElementById('scenRunnerBack')?.addEventListener('click', goScenario);
+  // between Adult and Paeds without leaving the feature. Stop any running timer first.
+  document.getElementById('scenRunnerBack')?.addEventListener('click', () => { stopScenTimer(); goScenario(); });
   startScenario(undefined, cohort);
+}
+
+// ── SCENARIO TIMER ──────────────────────────────────────────────────────────────
+// Optional OSCE countdown. Off by default. Ticks down from the chosen minutes; at zero
+// it flags "time's up" with a soft haptic but does NOT lock anything (practice, not
+// punishment). Goes amber in the final minute as a gentle wrap-up nudge.
+let _scenTimerId = null;
+function _fmtTime(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+function startScenTimer() {
+  stopScenTimer();
+  if (!G.scenTimerOn) return;
+  let remaining = (G.scenTimerMins || 10) * 60;
+  const clock = document.getElementById('scenTimerClock');
+  const bar = document.getElementById('scenTimerBar');
+  if (!clock || !bar) return;
+  clock.textContent = _fmtTime(remaining);
+  _scenTimerId = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 60 && remaining > 0) bar.classList.add('warn');   // amber wrap-up nudge
+    if (remaining <= 0) {
+      clock.textContent = "Time's up";
+      bar.classList.remove('warn');
+      bar.classList.add('done');
+      haptic('error');   // noticeable (not punitive) buzz to flag time's up
+      stopScenTimer();
+      return;
+    }
+    clock.textContent = _fmtTime(remaining);
+  }, 1000);
+}
+function stopScenTimer() {
+  if (_scenTimerId) { clearInterval(_scenTimerId); _scenTimerId = null; }
 }
 
 // Current cohort for the scenario runner ('adult' | 'paeds'). Stored so "Generate New
@@ -564,9 +642,18 @@ function startScenario(presId, cohort) {
       clearInterval(cyc);
       const sc = generateScenario(presId);
       renderScenarioCard(sc);
+      resetScenTimerBar();
+      startScenTimer();
     }, 900);
   } else {
     const sc = generateScenario(presId);
     renderScenarioCard(sc);
+    resetScenTimerBar();
+    startScenTimer();
   }
+}
+// Reset the timer bar's visual state (clear amber/done) so a new scenario starts fresh.
+function resetScenTimerBar() {
+  const bar = document.getElementById('scenTimerBar');
+  if (bar) { bar.classList.remove('warn', 'done'); }
 }

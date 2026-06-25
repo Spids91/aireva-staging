@@ -267,6 +267,7 @@ function showQuizActive() {
 
 // ── QUIZ TAB RENDER ───────────────────────────────────────────────────────────
 function renderQuizTab() {
+  if (typeof stopScenTimer === 'function') stopScenTimer();  // clear any running scenario timer
   showQuizTab();
   const done = isDailyDone();
   const now  = new Date();

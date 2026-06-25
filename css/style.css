@@ -1583,6 +1583,29 @@ ul { list-style: none; }
 /* Mega OSCE: purple accent, outline style. Reuses the shared amber "coming soon" badge
    (.scen-cohort-soon-badge stays amber for consistency with Paeds, per design). */
 .scen-cohort-mega { background:rgba(124,58,237,.12); color:#7C3AED; border-color:#7C3AED; }
+
+/* ─── SCENARIO TIMER ───────────────────────────────────────────────────────── */
+/* Choice-screen control: toggle + slider (slider hidden until toggled on). */
+.scen-timer-ctrl { margin-top:14px; padding:12px 14px; border-radius:var(--r12);
+  background:var(--surf2); border:1px solid var(--border); }
+.scen-timer-row { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+.scen-timer-label { font-size:var(--text-sm); font-weight:700; color:var(--text2); }
+.scen-timer-toggle { position:relative; width:44px; height:26px; border-radius:var(--r-pill);
+  background:var(--border); transition:background var(--dur-fast) var(--ease); flex:0 0 auto; }
+.scen-timer-toggle.on { background:var(--primary); }
+.scen-timer-knob { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
+  background:#fff; transition:transform var(--dur-fast) var(--ease); box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.scen-timer-toggle.on .scen-timer-knob { transform:translateX(18px); }
+.scen-timer-slider-wrap { display:flex; align-items:center; gap:12px; margin-top:12px; }
+.scen-timer-slider { flex:1; accent-color:var(--primary); cursor:pointer; }
+.scen-timer-val { font-size:var(--text-sm); font-weight:700; color:var(--text); min-width:48px; text-align:right; }
+/* Runner countdown bar */
+.scen-timer-bar { display:flex; align-items:center; justify-content:center; gap:8px;
+  margin:0 0 12px; padding:8px 14px; border-radius:var(--r12);
+  background:var(--primary-light); color:var(--primary); font-weight:800; font-size:var(--text-base);
+  font-variant-numeric:tabular-nums; transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.scen-timer-bar.warn { background:var(--warning-light); color:var(--warning); }
+.scen-timer-bar.done { background:var(--danger-light, #FEE2E2); color:var(--danger, #DC2626); }
 /* Coming-soon state: greyed and non-interactive, amber "coming soon" badge */
 .scen-cohort-soon { opacity:.55; cursor:default; }
 .scen-cohort-soon:active { transform:none; }

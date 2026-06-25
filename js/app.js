@@ -109,7 +109,9 @@ let G={
   perfectQuizzes:0,
   nightShiftDone:false,
   scenIntroSeen:false,
-  prestige:0
+  prestige:0,
+  scenTimerOn:false,
+  scenTimerMins:10
 };
 
 // Load the saved game state, then BACKFILL any fields missing from older saves.
@@ -541,6 +543,7 @@ function clearAllSearches(){
 }
 
 function showPage(id,btn){
+  if(typeof stopScenTimer==='function')stopScenTimer();  // clear scenario timer when leaving for any tab
   clearAllSearches();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
