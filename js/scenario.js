@@ -539,10 +539,11 @@ function goScenario() {
       </div>
     </div>
 
-    ${scenarioChoiceHTML()}
     <label class="scen-intro-skip" id="scenSkipRow">
-      <input type="checkbox" id="scenSkipChk"> Don't show this again
+      <input type="checkbox" id="scenSkipChk"> Skip this intro next time
     </label>
+
+    ${scenarioChoiceHTML()}
     <div class="scen-intro-note">Scenarios are study practice only. Always follow your current clinical practice guidelines.</div>`;
   document.getElementById('scenBack')?.addEventListener('click', renderQuizTab);
   // The skip checkbox is honoured when a cohort is chosen, so re-wire the cohort
@@ -569,7 +570,7 @@ function openScenarioRunner(cohort) {
   const wrap = document.getElementById('quizTabContent');
   if (!wrap) return;
   const timerBar = G.scenTimerOn
-    ? `<div class="scen-timer-bar" id="scenTimerBar"><span class="scen-timer-clock" id="scenTimerClock">${_fmtTime((G.scenTimerMins||10)*60)}</span></div>`
+    ? `<div class="scen-timer-bar" id="scenTimerBar"><span class="scen-timer-clock" id="scenTimerClock">⏱ ${_fmtTime((G.scenTimerMins||10)*60)}</span></div>`
     : '';
   wrap.innerHTML = `
     <div class="quiz-back-sticky" id="scenRunnerBack">
@@ -599,19 +600,19 @@ function startScenTimer() {
   const clock = document.getElementById('scenTimerClock');
   const bar = document.getElementById('scenTimerBar');
   if (!clock || !bar) return;
-  clock.textContent = _fmtTime(remaining);
+  clock.textContent = '⏱ ' + _fmtTime(remaining);
   _scenTimerId = setInterval(() => {
     remaining -= 1;
     if (remaining <= 60 && remaining > 0) bar.classList.add('warn');   // amber wrap-up nudge
     if (remaining <= 0) {
-      clock.textContent = "Time's up";
+      clock.textContent = "⏱ Time's up";
       bar.classList.remove('warn');
       bar.classList.add('done');
       haptic('error');   // noticeable (not punitive) buzz to flag time's up
       stopScenTimer();
       return;
     }
-    clock.textContent = _fmtTime(remaining);
+    clock.textContent = '⏱ ' + _fmtTime(remaining);
   }, 1000);
 }
 function stopScenTimer() {
