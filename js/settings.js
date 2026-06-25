@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v1.0.0 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.4 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -93,6 +93,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.4</h2>
+      <p>Scenarios are now patient-specific: each patient has their own medications, past history and symptoms rather than a generic summary. Medications use real brand names to encourage looking them up in Common Medications. New presentations: Burns and Stroke. Foreign Body Airway Obstruction is now conscious-only, keeping practice on the choking pathway. Scenarios no longer repeat the same presentation twice in a row. Stroke now models witnessed versus unwitnessed onset and last-known-well time. Chest pain, breathing and stroke scenarios reworded so the findings no longer give away the diagnosis. Many wording and realism fixes throughout.</p>
       <h2>v0.9.3</h2>
       <p>New floating nav bar with amber Practice target. OSCE reveal redesigned into colour-coded grade, branch and step blocks. New scenario: Foreign Body Airway Obstruction. Scenario variants doubled (6 each) with age-appropriate wording for young children. Onboarding reordered. Scenarios grouped by PHECC section. Wording and clarity fixes throughout.</p>
       <h2>v0.9.2</h2>
