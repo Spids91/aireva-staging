@@ -821,12 +821,14 @@ const PRESENTATIONS = [
         presentation:'Entry and exit burn wounds on the hand and foot, alert, in pain. Deceptively small skin marks.',
         allergies:'No known drug allergies.',
         events:'Received an electric shock; small but deep burn marks where current entered and exited.' },
-      { cause:'large burn with inhalation, shock', conscious:false,
+      { cause:'large burn with inhalation, severe', conscious:true,
         dispatch:'You are called to {location} for a critically burned PATIENT.',
-        presentation:'Extensive burns over more than a quarter of the body with facial burns, soot and singed airway, deeply unwell with a reduced level of consciousness, shallow breathing and poor perfusion. Hypotensive, tachycardic and hypoxic.',
+        presentation:'Extensive burns over more than a quarter of the body with facial burns, soot and a singed airway, drowsy but rousable, breathing fast and poorly perfused. Hypotensive, tachycardic and hypoxic, airway needs close watching.',
         allergies:'No known drug allergies.',
-        events:'Caught in a house fire with extensive flame burns and smoke inhalation; rapidly deteriorating.',
+        events:'Caught in a house fire with extensive flame burns and smoke inhalation; severely unwell.',
         // catastrophic: large burn + inhalation. Hypotensive, big HR/RR, low SpO2.
+        // Kept conscious (drowsy but rousable) so the scenario stays on the burns
+        // pathway rather than tipping toward the airway/AWB protocol.
         vitalsOverride:{
           spo2:[80,87],
           hr:  { dir:'up', intensity:0.7 },
