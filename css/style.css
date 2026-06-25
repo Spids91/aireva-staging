@@ -1580,6 +1580,9 @@ ul { list-style: none; }
 .scen-cohort-adult:active { box-shadow:0 1px 6px rgba(37,99,235,.25); }
 /* Paeds: amber accent, outline style so it reads clearly different from Adult */
 .scen-cohort-paeds { background:var(--warning-light); color:var(--warning); border-color:var(--warning); }
+/* Mega OSCE: purple accent, outline style. Reuses the shared amber "coming soon" badge
+   (.scen-cohort-soon-badge stays amber for consistency with Paeds, per design). */
+.scen-cohort-mega { background:rgba(124,58,237,.12); color:#7C3AED; border-color:#7C3AED; }
 /* Coming-soon state: greyed and non-interactive, amber "coming soon" badge */
 .scen-cohort-soon { opacity:.55; cursor:default; }
 .scen-cohort-soon:active { transform:none; }

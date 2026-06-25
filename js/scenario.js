@@ -404,10 +404,11 @@ function renderScenarioCard(sc) {
 // ── ENTRY POINTS ─────────────────────────────────────────────────────────────────
 // Open the Scenario landing page inside the quiz tab: explains the feature and lets
 // the user start. (Future: this is where a presentation/category picker will live.)
-// The two-button cohort choice (Adult / Paeds). Shared by the intro screen and the
-// skip path. Adult is the cobalt primary; Paeds is the amber "coming soon" placeholder
-// (greyed, disabled) until paediatric presentations exist, mirroring the old qmode-coming
-// pattern. When paeds content lands, flip the Paeds button to call openScenarioRunner('paeds').
+// The cohort choice buttons (Adult / Paeds / Mega OSCE). Shared by the intro screen and
+// the skip path. Adult is the cobalt primary; Paeds (amber) and Mega OSCE (purple) are
+// "coming soon" placeholders (greyed, disabled) until their content/engine exists,
+// mirroring the old qmode-coming pattern. When paeds content lands, flip the Paeds button
+// to call openScenarioRunner('paeds'); when the Mega OSCE engine lands, flip Mega likewise.
 function scenarioChoiceHTML() {
   return `
     <div class="scen-choice">
@@ -420,12 +421,18 @@ function scenarioChoiceHTML() {
         <span class="scen-cohort-txt"><span class="scen-cohort-name">Paediatric Scenario</span><span class="scen-cohort-sub">Generate a paediatric OSCE station</span></span>
         <span class="scen-cohort-soon-badge">Coming soon</span>
       </button>
+      <button class="scen-cohort-btn scen-cohort-mega scen-cohort-soon" id="scenMegaBtn" disabled>
+        <span class="scen-cohort-ico">🏔️</span>
+        <span class="scen-cohort-txt"><span class="scen-cohort-name">Mega OSCE</span><span class="scen-cohort-sub">Two or more presentations combined into one station</span></span>
+        <span class="scen-cohort-soon-badge">Coming soon</span>
+      </button>
     </div>`;
 }
 // Wire the two cohort buttons after the HTML is in the DOM.
 function wireScenarioChoice() {
   document.getElementById('scenAdultBtn')?.addEventListener('click', () => { openScenarioRunner('adult'); haptic(); });
   document.getElementById('scenPaedsBtn')?.addEventListener('click', () => { showToast('Paediatric scenarios, coming soon'); });
+  document.getElementById('scenMegaBtn')?.addEventListener('click', () => { showToast('Mega OSCE, coming soon'); });
 }
 
 function goScenario() {
@@ -485,6 +492,10 @@ function goScenario() {
   document.getElementById('scenPaedsBtn')?.addEventListener('click', () => {
     if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
     showToast('Paediatric scenarios, coming soon');
+  });
+  document.getElementById('scenMegaBtn')?.addEventListener('click', () => {
+    if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
+    showToast('Mega OSCE, coming soon');
   });
 }
 
