@@ -95,7 +95,11 @@ function generateScenario(presId) {
   // catastrophic large-burn-plus-inhalation case). Absent override = unchanged.
   const d = variant.vitalsOverride || pres.deviations || {};
   const hr  = d.hr  ? applyRelative(band.hr, d.hr, age) : _ri(band.hr[0], band.hr[1]);
-  const rr  = d.rr  ? applyRelative(band.rr, d.rr, age) : _ri(band.rr[0], band.rr[1]);
+  // RR: usually a relative deviation, but a variant may give an absolute [lo,hi] range
+  // (like spo2/bgl) for precise control, e.g. opioid respiratory depression RR [6,10].
+  const rr  = Array.isArray(d.rr) ? _ri(d.rr[0], d.rr[1])
+            : d.rr ? applyRelative(band.rr, d.rr, age)
+            : _ri(band.rr[0], band.rr[1]);
   const sys = d.bpSys ? applyRelative([band.bp[0], band.bp[1]], d.bpSys, age) : _ri(band.bp[0], band.bp[1]);
   const dia = d.bpDia ? applyRelative([band.bp[2], band.bp[3]], d.bpDia, age) : _ri(band.bp[2], band.bp[3]);
   // SpO2: most presentations use a flat absolute range [min,max]. A presentation

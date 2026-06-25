@@ -297,6 +297,123 @@ const PRESENTATIONS = [
   },
 
   {
+    id: 'poisons',
+    name: 'Poisoning / Overdose',
+    category: 'Toxicology',
+    demographics: { minAge: 14, maxAge: 90, sex: 'any' },
+    variants: [
+      // ── OPIATE (×3) ──────────────────────────────────────────────────────────
+      // V1: classic opioid toxidrome with INADEQUATE ventilation → naloxone pathway.
+      { cause:'opioid toxidrome, respiratory depression', conscious:false,
+        dispatch:'You are called to {location} for a PATIENT who is drowsy and barely responsive.',
+        presentation:'Markedly reduced level of consciousness, slow shallow breathing, pinpoint pupils, dusky lips, responds only to a painful stimulus.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Markedly reduced consciousness, slow shallow breathing, pinpoint pupils, cyanosed lips, responds only to pain.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Found drowsy and difficult to rouse; a friend present mentions recreational drug use earlier but is vague on detail.',
+        vitalsOverride:{ rr:[6,10], spo2:[80,90], hr:{ dir:'down', intensity:0.2 } } },
+      // V2: opioid toxidrome BUT ADEQUATE ventilation → monitor, don't rush naloxone.
+      { cause:'opioid toxidrome, ventilating adequately', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who is very drowsy.',
+        presentation:'Drowsy and slow to rouse, pinpoint pupils, but breathing adequately on their own and maintaining their own airway.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Drowsy and slow to rouse, pinpoint pupils, but breathing adequately and maintaining the airway.', medications:'Methadone (on a maintenance programme).', pmh:'Opioid dependence, on a maintenance programme.' },
+        events:'Became progressively drowsy at home; took their usual medication and reportedly a little extra.',
+        vitalsOverride:{ rr:[10,12], spo2:[92,96] } },
+      // V3: found unresponsive, severe → the found-down, limited-history case.
+      { cause:'opioid toxidrome, found unresponsive', conscious:false,
+        dispatch:'You are called to {location} for a PATIENT found unresponsive.',
+        presentation:'Unresponsive, very slow breathing, pinpoint pupils, pale and cyanosed.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Unresponsive, very slow breathing, pinpoint pupils, pale and cyanosed.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Found unresponsive a short time ago; no reliable history available at the scene.',
+        vitalsOverride:{ rr:[4,8], spo2:[78,88], hr:{ dir:'down', intensity:0.25 } } },
+      // ── ALCOHOL (×1) ─────────────────────────────────────────────────────────
+      // V4: the CHECK-THE-BGL branch (hypoglycaemia mimics/coexists with intoxication).
+      { cause:'acute alcohol intoxication', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who is intoxicated and unwell.',
+        presentation:'Smell of alcohol, slurred speech and ataxic, drowsy but rousable, has vomited, unsteady on their feet.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Smell of alcohol, slurred and ataxic, drowsy but rousable, vomiting, unsteady.', medications:'Nil regular.', pmh:'Nil of note.' },
+        events:'Has been drinking heavily over the evening; found unsteady and confused by friends.',
+        vitalsOverride:{ hr:{ dir:'up', intensity:0.25 } } },
+      // ── OTHER (×2) ───────────────────────────────────────────────────────────
+      // V5: general ingestion, looks well early → supportive care branch.
+      { cause:'ingestion, no specific toxidrome', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who has taken an overdose.',
+        presentation:'Alert but distressed and tearful, nauseated, reluctant to say much, no specific toxidrome on examination.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Alert but distressed, nauseated, no specific toxidrome on examination.', medications:'Nil regular.', pmh:'Low mood recently (per the patient).' },
+        events:'Reports having taken an overdose of tablets a short time ago; declines to give the amount.',
+        vitalsOverride:{ hr:{ dir:'up', intensity:0.2 } } },
+      // V6: corrosive ingestion → the early-branch teaching (sips water/milk, no emesis, no charcoal).
+      { cause:'corrosive ingestion', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT with mouth and throat pain after swallowing something.',
+        presentation:'Distressed, drooling, pain in the mouth and throat, reluctant to swallow, voice sounds altered.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Distressed, drooling, mouth and throat pain, reluctant to swallow, altered voice.', medications:'Nil regular.', pmh:'Nil of note.' },
+        events:'Swallowed a household cleaning product a short time ago; immediate mouth and throat pain.',
+        vitalsOverride:{ hr:{ dir:'up', intensity:0.3 } } },
+    ],
+    painBased: false,   // toxicology: presentation is the toxidrome, not a pain complaint
+    // ⚠️ Vitals: defining picture varies by toxidrome. Opioid variants carry their own
+    // vitalsOverride (low RR/SpO2). The presentation default below is mild/non-specific so
+    // alcohol/other variants stay largely normal early (many overdoses look well at first).
+    deviations: {
+      hr: { dir:'up', intensity:0.2 },   // mild non-specific; opioid variants override downward
+    },
+    sample: {
+      symptoms:'Presentation depends on the substance and the toxidrome; identify what you observe.',
+      medications:'Varies; see patient history.',
+      pmh:'Varies; see patient history.',
+      lastIntake:'May be relevant; establish what was taken and when from the history.',
+    },
+    opqrst: {
+      onset:'Relating to when the substance was taken.',
+      provocation:'Not a pain complaint in most poisonings (corrosive ingestion is an exception).',
+      quality:'Depends on the toxidrome.',
+      radiates:'No.',
+      severity:'0',
+      time:'Establish the time the substance was taken from the history.',
+    },
+    reveal: {
+      diagnosis:'Poisoning / overdose. Identify the toxidrome and the poison type (opiate, alcohol, corrosive, or other), this drives management. The opioid toxidrome is reduced consciousness, respiratory depression and pinpoint pupils.',
+      pathway:'Caution with oral intake throughout. If a corrosive was ingested: sips of water or milk, do not induce vomiting. If activated charcoal is indicated and a solid substance was ingested with GCS 15: consider activated charcoal 50g PO (the adsorbed-substance list is in the PHECC Field Guide; charcoal is not for corrosives). Consider ALS. Then identify the poison type. Opiate: if ventilations are inadequate, give naloxone, then go to the Abnormal Work of Breathing CPG; if ventilations are adequate, support with oxygen and monitoring. Alcohol: check blood glucose, and if BGL is less than 4 or greater than 20 mmol/L go to the Glycaemic Emergency CPG. Other: supportive care. Consider oxygen therapy, ECG and SpO2 monitoring, and transport.',
+      interventions:'Recognise the toxidrome and identify the poison type. Naloxone is given for inadequate ventilation in opioid toxidrome: an EMT gives 800mcg IN (repeat PRN); a Paramedic may give 800mcg IN or 400mcg IM/SC (repeat PRN). Activated charcoal 50g PO if indicated with GCS 15 (not for corrosives). Corrosive: sips of water or milk, no induced vomiting, airway vigilance. Consider oxygen therapy (all scopes), ECG and SpO2 monitoring, supportive care and transport. Consider ALS.',
+      diagnosisBlocks: [
+        { type:'lead', body:'Poisoning / overdose. Identify the toxidrome and the poison type, this drives management.' },
+        { type:'note', label:'Opioid toxidrome', body:'Reduced consciousness, respiratory depression and pinpoint pupils.' },
+        { type:'note', body:'Many overdoses look well early. Establish what was taken and when from the history.' },
+      ],
+      pathwayBlocks: [
+        { type:'note', body:'Caution with oral intake throughout.' },
+        { type:'branch', label:'Ingested corrosive', body:'Sips of water or milk. Do not induce vomiting. Activated charcoal is not used for corrosives. Airway vigilance.' },
+        { type:'branch', label:'Activated charcoal (solid substance, GCS 15)', body:'If indicated, consider activated charcoal 50g PO. The adsorbed-substance list is in the PHECC Field Guide.' },
+        { type:'step', body:'Consider ALS. Identify the poison type.' },
+        { type:'branch', label:'Opiate', body:'Inadequate ventilations: give naloxone, then go to the Abnormal Work of Breathing CPG. Adequate ventilations: oxygen and monitoring.' },
+        { type:'branch', label:'Alcohol', body:'Check blood glucose. If BGL is less than 4 or greater than 20 mmol/L, go to the Glycaemic Emergency CPG.' },
+        { type:'branch', label:'Other', body:'Supportive care.' },
+        { type:'step', body:'Consider oxygen therapy. ECG and SpO2 monitoring. Transport.' },
+      ],
+      interventionsBlocks: [
+        { type:'step', body:'Recognise the toxidrome and identify the poison type.' },
+        { type:'branch', label:'Opioid, inadequate ventilation', body:'Naloxone: EMT 800mcg IN (repeat PRN); Paramedic 800mcg IN or 400mcg IM/SC (repeat PRN). Then the Abnormal Work of Breathing CPG.' },
+        { type:'branch', label:'Solid substance, GCS 15', body:'Consider activated charcoal 50g PO if indicated. Not for corrosives.' },
+        { type:'branch', label:'Corrosive', body:'Sips of water or milk. No induced vomiting. Airway vigilance.' },
+        { type:'note', body:'Consider oxygen therapy (all scopes), ECG and SpO2 monitoring, supportive care, transport. Consider ALS.' },
+      ],
+      drugs: [
+        { name:'Naloxone (opioid toxidrome, inadequate ventilation)',
+          adult:{ paramedic:'EMT scope: 800mcg IN, repeat PRN. Paramedic scope adds: 800mcg IN or 400mcg IM/SC, repeat PRN.' } },
+        { name:'Activated Charcoal (Consider)',
+          adult:{ paramedic:'50g PO, if indicated and a solid substance was ingested with GCS 15. Not for corrosives. Adsorbed-substance list in the PHECC Field Guide.' } },
+        { name:'Oxygen Therapy (Consider)',
+          adult:{ paramedic:'Consider, all scopes. Note: in paraquat poisoning do not administer oxygen unless SpO2 is below 92%.' } },
+      ],
+    },
+  },
+
+
+  {
     id: 'hypoglycaemia',
     name: 'Hypoglycaemia',
     category: 'Medical',
