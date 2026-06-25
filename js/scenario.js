@@ -105,7 +105,17 @@ function generateScenario(presId) {
                  : age <= 15 ? `${age}-year-old` : `${age}-year-old`;
   const personWord = age <= 15 ? (sex === 'male' ? 'boy' : 'girl')
                                : (sex === 'male' ? 'man' : 'woman');
-  const location = _pick(SCEN_LOCATIONS);  // {name, found}
+  // Location pick. A variant can declare `witness:'witnessed'|'unwitnessed'` to keep
+  // the scene and the history consistent (general capability, any presentation can use it):
+  //   'unwitnessed' → patient is alone with no witness to onset, so pick a location where
+  //                   that's plausible (solo:true), and last-known-well becomes "unknown".
+  //   'witnessed'   → someone was present, so avoid solo-only spots; the variant supplies
+  //                   a real last-known-well via its sample.lastIntake.
+  // No witness field = original behaviour (pick from all locations).
+  let locPool = SCEN_LOCATIONS;
+  if (variant.witness === 'unwitnessed')      locPool = SCEN_LOCATIONS.filter(l => l.solo);
+  else if (variant.witness === 'witnessed')   locPool = SCEN_LOCATIONS.filter(l => !l.solo || l.found);
+  const location = _pick(locPool.length ? locPool : SCEN_LOCATIONS);  // {name, found, solo}
   const dispatch = variant.dispatch
     .replace('{location}', location.name)
     .replace('a PATIENT', `a ${ageLabel} ${personWord}`)
@@ -142,7 +152,14 @@ function generateScenario(presId) {
   // while presentations not yet migrated keep their shared default.
   const vs = variant.sample || {};
   const ps = pres.sample;
-  const lastIntake = conscious ? (vs.lastIntake || ps.lastIntake) : 'Unknown, patient unresponsive, no reliable history.';
+  // Unwitnessed onset (patient found alone) → last-known-well is genuinely unknown,
+  // which is itself clinically important (often excludes the thrombolysis window).
+  // This overrides any sample lastIntake for that variant.
+  const lastIntake = !conscious
+    ? 'Unknown, patient unresponsive, no reliable history.'
+    : variant.witness === 'unwitnessed'
+      ? 'Unknown, the patient was found alone and the time of onset is unwitnessed.'
+      : (vs.lastIntake || ps.lastIntake);
 
   // For an UNCONSCIOUS patient, almost no reliable history is obtainable — the student's
   // learning is to assess (vitals/BGL), NOT to interrogate a bystander and hope they
