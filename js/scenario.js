@@ -397,10 +397,50 @@ function renderScenarioCard(sc) {
 // ── ENTRY POINTS ─────────────────────────────────────────────────────────────────
 // Open the Scenario landing page inside the quiz tab: explains the feature and lets
 // the user start. (Future: this is where a presentation/category picker will live.)
+// The two-button cohort choice (Adult / Paeds). Shared by the intro screen and the
+// skip path. Adult is the cobalt primary; Paeds is the amber "coming soon" placeholder
+// (greyed, disabled) until paediatric presentations exist, mirroring the old qmode-coming
+// pattern. When paeds content lands, flip the Paeds button to call openScenarioRunner('paeds').
+function scenarioChoiceHTML() {
+  return `
+    <div class="scen-choice">
+      <button class="scen-cohort-btn scen-cohort-adult" id="scenAdultBtn">
+        <span class="scen-cohort-ico">🧑</span>
+        <span class="scen-cohort-txt"><span class="scen-cohort-name">Adult Scenario</span><span class="scen-cohort-sub">Generate an adult OSCE station</span></span>
+      </button>
+      <button class="scen-cohort-btn scen-cohort-paeds scen-cohort-soon" id="scenPaedsBtn" disabled>
+        <span class="scen-cohort-ico">🧒</span>
+        <span class="scen-cohort-txt"><span class="scen-cohort-name">Paediatric Scenario</span><span class="scen-cohort-sub">Generate a paediatric OSCE station</span></span>
+        <span class="scen-cohort-soon-badge">Coming soon</span>
+      </button>
+    </div>`;
+}
+// Wire the two cohort buttons after the HTML is in the DOM.
+function wireScenarioChoice() {
+  document.getElementById('scenAdultBtn')?.addEventListener('click', () => { openScenarioRunner('adult'); haptic(); });
+  document.getElementById('scenPaedsBtn')?.addEventListener('click', () => { showToast('Paediatric scenarios, coming soon'); });
+}
+
 function goScenario() {
   window.scrollTo({ top: 0, behavior: 'instant' });
   const wrap = document.getElementById('quizTabContent');
   if (!wrap) return;
+  // If the user previously ticked "don't show again", show JUST the cohort choice
+  // (Adult / Paeds), not the explainer, and not an auto-generated scenario.
+  if (G.scenIntroSeen) {
+    wrap.innerHTML = `
+      <div class="quiz-back-sticky" id="scenBack">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back
+      </div>
+      <div class="pg-title">🏥 OSCE Scenario Generator</div>
+      <div class="pg-sub">Choose a cohort to generate a station.</div>
+      ${scenarioChoiceHTML()}
+      <div class="scen-intro-note">Scenarios are study practice only. Always follow your current clinical practice guidelines.</div>`;
+    document.getElementById('scenBack')?.addEventListener('click', renderQuizTab);
+    wireScenarioChoice();
+    return;
+  }
+  // First time (or not yet dismissed): explanation cards + don't-show-again + the choice.
   wrap.innerHTML = `
     <div class="quiz-back-sticky" id="scenBack">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back
@@ -423,15 +463,27 @@ function goScenario() {
       </div>
     </div>
 
-    <button class="btn-pri" id="scenStartBtn">Generate a Scenario</button>
+    ${scenarioChoiceHTML()}
+    <label class="scen-intro-skip" id="scenSkipRow">
+      <input type="checkbox" id="scenSkipChk"> Don't show this again
+    </label>
     <div class="scen-intro-note">Scenarios are study practice only. Always follow your current clinical practice guidelines.</div>`;
   document.getElementById('scenBack')?.addEventListener('click', renderQuizTab);
-  document.getElementById('scenStartBtn')?.addEventListener('click', () => { openScenarioRunner(); haptic(); });
+  // The skip checkbox is honoured when a cohort is chosen, so re-wire the cohort
+  // buttons to persist the preference first, then proceed.
+  document.getElementById('scenAdultBtn')?.addEventListener('click', () => {
+    if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
+    openScenarioRunner('adult'); haptic();
+  });
+  document.getElementById('scenPaedsBtn')?.addEventListener('click', () => {
+    if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
+    showToast('Paediatric scenarios, coming soon');
+  });
 }
 
 // The runner view: the back bar returns to the landing page, and a container the
 // generated station card renders into.
-function openScenarioRunner() {
+function openScenarioRunner(cohort) {
   window.scrollTo({ top: 0, behavior: 'instant' });
   const wrap = document.getElementById('quizTabContent');
   if (!wrap) return;
@@ -440,11 +492,19 @@ function openScenarioRunner() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back
     </div>
     <div id="scenarioContent"></div>`;
+  // Back returns to the cohort choice screen (goScenario), so the user can switch
+  // between Adult and Paeds without leaving the feature.
   document.getElementById('scenRunnerBack')?.addEventListener('click', goScenario);
-  startScenario();
+  startScenario(undefined, cohort);
 }
 
-function startScenario(presId) {
+// Current cohort for the scenario runner ('adult' | 'paeds'). Stored so "Generate New
+// Scenario" stays in the same cohort. Until paediatric presentations exist, the cohort
+// does not change generation (all presentations are adult); it is threaded now so paeds
+// can filter here later (e.g. generateScenario with a cohort/age filter).
+let _scenCohort = 'adult';
+function startScenario(presId, cohort) {
+  if (cohort) _scenCohort = cohort;
   const wrap = document.getElementById('scenarioContent');
   // Brief "generating" beat — hints that each station is freshly built, and stops
   // the card from just popping in. ~900ms, then render.

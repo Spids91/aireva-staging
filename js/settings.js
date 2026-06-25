@@ -2,6 +2,9 @@
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
+  // Always open scrolled to the top, not wherever it was last left.
+  const sheet = document.querySelector('#settingsPanel .settings-sheet');
+  if (sheet) sheet.scrollTop = 0;
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const toggle = document.getElementById('darkToggle');
   if (toggle) toggle.classList.toggle('on', isDark);

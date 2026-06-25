@@ -187,7 +187,7 @@ const PRESENTATIONS = [
     id: 'anaphylaxis',
     name: 'Anaphylaxis',
     category: 'Toxicology',
-    demographics: { minAge: 1, maxAge: 90, sex: 'any' },
+    demographics: { minAge: 16, maxAge: 90, sex: 'any' },
     variants: [
       { cause:'bee sting', conscious:true,
         dispatch:'You are called to {location} for a PATIENT with difficulty breathing.',
@@ -300,7 +300,7 @@ const PRESENTATIONS = [
     id: 'poisons',
     name: 'Poisoning / Overdose',
     category: 'Toxicology',
-    demographics: { minAge: 14, maxAge: 90, sex: 'any' },
+    demographics: { minAge: 16, maxAge: 90, sex: 'any' },
     variants: [
       // ── OPIATE (×3) ──────────────────────────────────────────────────────────
       // V1: classic opioid toxidrome with INADEQUATE ventilation → naloxone pathway.
@@ -421,7 +421,7 @@ const PRESENTATIONS = [
     id: 'hypoglycaemia',
     name: 'Hypoglycaemia',
     category: 'Medical',
-    demographics: { minAge: 1, maxAge: 90, sex: 'any' },
+    demographics: { minAge: 16, maxAge: 90, sex: 'any' },
     variants: [
       // Conscious level is the key decision fork here (gel vs glucagon). The engine
       // adds "found unresponsive" vs "collapsed there" framing based on the location.
@@ -1157,4 +1157,115 @@ const PRESENTATIONS = [
       ],
     },
   },
+  {
+    id: 'seizure',
+    name: 'Seizure / Convulsion',
+    category: 'Neurological',
+    demographics: { minAge: 16, maxAge: 90, sex: 'any' },
+    variants: [
+      // ── POSTICTAL (conscious:true) ───────────────────────────────────────────
+      // V1: known epilepsy, postictal. Brand-named anticonvulsant (MEDREF-resolving).
+      { cause:'known epilepsy, postictal', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who has had a seizure.',
+        presentation:'Drowsy and confused, gradually coming round, no longer convulsing. Has been incontinent and the tongue looks bitten. Rousable and slowly orienting.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Postictal drowsiness and confusion, bitten tongue, was incontinent, now slowly orienting.', medications:'Keppra.', pmh:'Epilepsy.', lastIntake:'Not certain; family think they may have missed a dose of their tablets.' },
+        opqrst:{ onset:'The seizure came on suddenly a short while ago.', provocation:'Nothing makes it better or worse.', quality:'No pain. Drowsy and muddled after the seizure.', radiates:'No.', severity:'0', time:'A few minutes ago; now settling.' },
+        events:'Known epilepsy; had a witnessed generalised seizure that stopped on its own, now postictal.' },
+      // V3: first-ever seizure, postictal. No history, the "is this their first?" teaching.
+      { cause:'first-ever seizure, postictal', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who collapsed and shook.',
+        presentation:'Postictal and confused, slowly coming round. Witnesses describe generalised shaking that has now stopped. Looks frightened and disorientated.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Postictal confusion, slowly coming round, no recollection of the event.', medications:'Nil regular.', pmh:'Nil of note; no previous seizures.', lastIntake:'Had eaten normally earlier; nothing unusual.' },
+        opqrst:{ onset:'Collapsed suddenly with no warning, per witnesses.', provocation:'Nothing makes it better or worse.', quality:'No pain. Confused and frightened.', radiates:'No.', severity:'0', time:'A few minutes ago.' },
+        events:'No known epilepsy; collapsed and had a witnessed convulsion, the first time this has ever happened.' },
+      // V4: alcohol-withdrawal seizure, postictal. Withdrawal context in history, not S/S.
+      { cause:'alcohol-withdrawal seizure, postictal', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who had a fit.',
+        presentation:'Postictal, tremulous and sweaty, confused but rousable. Visibly shaky and anxious.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Postictal confusion, marked tremor, sweating, anxious and shaky.', medications:'Nil regular.', pmh:'Heavy alcohol use.', lastIntake:'Has not had a drink in a couple of days; eating poorly.' },
+        opqrst:{ onset:'The seizure came on suddenly.', provocation:'Nothing makes it better or worse.', quality:'No pain. Shaky, sweaty and on edge.', radiates:'No.', severity:'0', time:'A few minutes ago.' },
+        events:'Heavy regular drinker who stopped a couple of days ago; had a witnessed seizure.' },
+      // V6: post-head-injury seizure, postictal. Visible injury is an OBSERVED sign (S/S ok);
+      //     the mechanism (the fall/blow) is the cause, elicited via Events.
+      { cause:'post-head-injury seizure, postictal', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who collapsed and convulsed.',
+        presentation:'Postictal and confused, with a visible graze and swelling to the side of the head and a small scalp laceration. Slowly orienting.',
+        allergies:'No known drug allergies.',
+        sample:{ symptoms:'Postictal confusion, visible head graze and swelling, small scalp laceration, slowly orienting.', medications:'Nil regular.', pmh:'Nil of note.', lastIntake:'Had eaten earlier; nothing unusual.' },
+        opqrst:{ onset:'Convulsed a short time after the knock to the head.', provocation:'Nothing makes it better or worse.', quality:'No pain reported, though confused; sore head on examination.', radiates:'No.', severity:'0', time:'A few minutes ago.' },
+        events:'Had a fall with a knock to the head earlier, then a witnessed convulsion.' },
+      // ── ACTIVELY SEIZING (conscious:false) ───────────────────────────────────
+      // V2: prolonged active seizure. The benzodiazepine pathway case.
+      { cause:'prolonged active seizure', conscious:false,
+        dispatch:'You are called to {location} for a PATIENT who is fitting.',
+        presentation:'Actively convulsing, generalised tonic-clonic movements ongoing for several minutes, not responding, frothing at the mouth, cyanosed around the lips. Still seizing on your arrival.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Actively convulsing, generalised tonic-clonic, frothing, cyanosed lips, not responding.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Witnessed to start seizing several minutes ago and has not stopped, prompting the call.',
+        vitalsOverride:{ hr:{ dir:'up', intensity:0.45 }, spo2:[88,94] } },
+      // V5: recurrent seizures / status. Repeated seizures without recovery.
+      { cause:'recurrent seizures without recovery', conscious:false,
+        dispatch:'You are called to {location} for a PATIENT having repeated fits.',
+        presentation:'Has had repeated seizures without fully recovering in between, now convulsing again, not responsive between episodes. Airway noisy with secretions.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Repeated seizures without recovery, convulsing again, unresponsive between episodes, noisy airway.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Known epilepsy; multiple seizures in succession today without recovering consciousness between them.',
+        vitalsOverride:{ hr:{ dir:'up', intensity:0.5 }, spo2:[86,93] } },
+    ],
+    painBased: false,
+    // Default deviations for the postictal/general case: mild sympathetic surge, BGL checked
+    // (the CPG's "check blood glucose" is the teaching point, value normal here).
+    deviations: {
+      hr: { dir:'up', intensity:0.4 },   // ictal/postictal sympathetic surge
+      spo2: [92, 97],                     // may dip during/just after a seizure
+    },
+    sample: {
+      symptoms:'Seizure activity and postictal state; features depend on the cause.',
+      medications:'Varies; see patient history.',
+      pmh:'Varies; see patient history.',
+      lastIntake:'Often not relevant; establish from the history.',
+    },
+    opqrst: {
+      onset:'Sudden seizure activity.',
+      provocation:'Not a pain complaint.',
+      quality:'Seizure and postictal state, not pain.',
+      radiates:'No.',
+      severity:'0',
+      time:'Recent; establish timing from the history.',
+    },
+    reveal: {
+      diagnosis:'Seizure / convulsion. First protect the patient from harm and manage the airway, then determine whether they are still seizing or postictal. Always check the blood glucose and consider other causes.',
+      pathway:'Protect from harm and do not restrain. Give oxygen and manage the airway, recovery position when able. Determine seizure status. If actively seizing: request ALS and give a benzodiazepine (maximum 4 doses regardless of route, a benzodiazepine given before arrival counts as a dose). If postictal: consider ALS, supportive care, monitor and reassess. Check blood glucose, and if it is less than 4 or greater than 20 mmol/L go to the Glycaemic Emergency CPG. If the patient recommences seizing, regard it as a new event, give a further dose, and consider medical advice. Reassess and transport.',
+      interventions:'Protect from harm (do not restrain), manage the airway and give oxygen, recovery position when able. If actively seizing, request ALS and give a benzodiazepine per scope and route. Check blood glucose and treat per the Glycaemic Emergency CPG if abnormal. Monitor, reassess and transport; consider medical advice for recurrent seizures.',
+      diagnosisBlocks: [
+        { type:'lead', body:'Seizure / convulsion. Protect from harm, manage the airway, and determine seizing versus postictal.' },
+        { type:'note', body:'Always check the blood glucose. Consider other causes: head injury, hypoglycaemia, alcohol or drug withdrawal, poisons, infection.' },
+      ],
+      pathwayBlocks: [
+        { type:'step', body:'Protect from harm. Do not restrain. Oxygen therapy and airway management; recovery position when able.' },
+        { type:'branch', label:'Actively seizing', body:'Request ALS. Give a benzodiazepine. Maximum 4 doses regardless of route; a benzodiazepine given before arrival counts as a dose.' },
+        { type:'branch', label:'Postictal', body:'Consider ALS. Supportive care, monitor and reassess.' },
+        { type:'step', body:'Check blood glucose. If less than 4 or greater than 20 mmol/L, go to the Glycaemic Emergency CPG.' },
+        { type:'note', body:'If the patient recommences seizing, regard it as a new event: give a further dose, consider medical advice, reassess and transport.' },
+      ],
+      interventionsBlocks: [
+        { type:'step', body:'Protect from harm; do not restrain. Manage the airway, give oxygen, recovery position when able.' },
+        { type:'branch', label:'Actively seizing', body:'Request ALS and give a benzodiazepine per scope and route.' },
+        { type:'step', body:'Check blood glucose; treat per the Glycaemic Emergency CPG if abnormal.' },
+        { type:'note', body:'Monitor, reassess and transport. Consider medical advice for recurrent seizures.' },
+      ],
+      drugs: [
+        { name:'Midazolam (actively seizing)',
+          adult:{ paramedic:'10mg buccal, 5mg IN, or 5mg IM.', ap:'2.5mg IV/IO.' } },
+        { name:'Diazepam (actively seizing)',
+          adult:{ paramedic:'Not in Paramedic scope.', ap:'10mg PR, or 5mg IV/IO.' } },
+        { name:'Oxygen Therapy',
+          adult:{ paramedic:'Consider; support the airway and oxygenation.' } },
+      ],
+    },
+  },
+
 ];

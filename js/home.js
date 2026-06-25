@@ -46,7 +46,7 @@ function renderHome(){
   // Level card
   const lv=getLevel(G.xp),nxt=LEVELS[LEVELS.indexOf(lv)+1];
   document.getElementById('homeLevelCard').style.background=lv.gradient;
-  document.getElementById('hlcName').textContent=lv.name;
+  document.getElementById('hlcName').textContent=lv.name+prestigeStars(G.prestige);
   document.getElementById('hlcXP').textContent=G.xp;
   if(nxt){
     const pct=(G.xp-lv.xp)/(lv.next-lv.xp)*100;

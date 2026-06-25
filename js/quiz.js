@@ -352,6 +352,11 @@ function goSetup(mode, adaptive) {
   window.scrollTo({top:0,behavior:'instant'});
   QZ.mode = mode;
   QZ.adaptive = adaptive;
+  // Reset format to Multiple Choice to match the visual default the setup screen
+  // renders (the MC card has the `on` class). Without this, leaving a flashcard quiz
+  // improperly leaves QZ.fmt='fc', so the next quiz silently launches as flashcards
+  // even though MC appears selected.
+  QZ.fmt = 'mc';
   if (mode === 'weakspots') { launchWeakSpots(); return; }
 
   const titles = { standard:'📚 Standard Quiz', adaptive:'🧠 Adaptive Quiz', timed:'⚡ Timed Quiz', review:'🔁 Spaced Review', terms:'📖 Medical Terms Quiz' };
@@ -418,6 +423,7 @@ function selectCat(name) {
   QZ.mode = 'category';
   QZ.category = name;
   QZ.adaptive = false;
+  QZ.fmt = 'mc';   // match the MC visual default below; don't inherit a stale 'fc'
   document.getElementById('quizTabContent').innerHTML = `
     <div class="quiz-back-sticky" onclick="goCategoryPicker()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back

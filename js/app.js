@@ -22,6 +22,27 @@ const LEVELS=[
 ];
 function getLevel(xp){for(let i=LEVELS.length-1;i>=0;i--)if(xp>=LEVELS[i].xp)return LEVELS[i];return LEVELS[0];}
 
+// ── PRESTIGE ──────────────────────────────────────────────────────────────────
+// Once a user reaches the top level (Master Clinician) they can "prestige": their
+// XP/level ladder resets to zero so they climb again, and a permanent star is added
+// to their level name. NOTHING else is touched — mastery, badges, notes and streak
+// all survive. prestige count lives in G.prestige.
+function atMaxLevel(xp){ return getLevel(xp) === LEVELS[LEVELS.length-1]; }
+// The star suffix shown after the level name. Up to 3 stars render as stars;
+// beyond that it collapses to a star with a number so the name never gets crowded.
+function prestigeStars(n){
+  if(!n || n < 1) return '';
+  if(n <= 3) return ' ' + '⭐'.repeat(n);
+  return ' ⭐×' + n;
+}
+function doPrestige(){
+  G.prestige = (G.prestige || 0) + 1;
+  G.xp = 0;                 // reset the XP ladder ONLY
+  saveG();
+  checkBadges();            // may unlock a prestige badge
+  haptic('success');
+}
+
 // Mastery tier from a drug's cumulative correct-answer count. These thresholds
 // also feed the spaced-repetition intervals in quiz.js, so changing them shifts
 // both the badges/labels AND how often a drug resurfaces for review.
@@ -46,7 +67,6 @@ function masteryTag(id){
 // BADGES
 const BADGES=[
   {id:'first_quiz',     icon:'🎯', name:'First Steps',      desc:'Complete your first quiz',            check:g=>g.quizzes>=1},
-  {id:'streak_7',       icon:'📅', name:'Consistent',       desc:'Reach a 7 day streak',                check:g=>g.streak>=7},
   {id:'streak_30',      icon:'🔥', name:'Unstoppable',      desc:'Reach a 30 day streak',               check:g=>g.streak>=30},
   {id:'mastered_10',    icon:'⭐', name:'Getting There',    desc:'Master 10 drugs',                     check:g=>Object.values(g.drugCorrect).filter(v=>v>=10).length>=10},
   {id:'mastered_25',    icon:'💜', name:'Well Versed',      desc:'Master 25 drugs',                     check:g=>Object.values(g.drugCorrect).filter(v=>v>=10).length>=25},
@@ -65,7 +85,10 @@ const BADGES=[
   {id:'daily_30',       icon:'🗓️', name:'Daily Legend',     desc:'Complete 30 daily challenges',        check:g=>(g.dailyDoneCount||0)>=30},
   {id:'perfect_week',   icon:'🌟', name:'Perfect Week',     desc:'Reach a 7 day streak',                check:g=>g.streak>=7},
   {id:'note_taker',     icon:'📝', name:'Note Taker',       desc:'Add notes to 10 drugs',               check:g=>Object.values(g.notes||{}).filter(n=>n&&n.trim().length>0).length>=10},
-  {id:'night_shift',    icon:'🌙', name:'Night Shift',      desc:'Do a quiz between midnight and 6am',  check:g=>g.nightShiftDone===true}
+  {id:'night_shift',    icon:'🌙', name:'Night Shift',      desc:'Do a quiz between midnight and 6am',  check:g=>g.nightShiftDone===true},
+  {id:'prestige_1',     icon:'✨', name:'Prestige',         desc:'Prestige for the first time',         check:g=>(g.prestige||0)>=1},
+  {id:'prestige_5',     icon:'🌟', name:'Prestige V',       desc:'Prestige 5 times',                    check:g=>(g.prestige||0)>=5},
+  {id:'prestige_10',    icon:'💫', name:'Prestige X',       desc:'Prestige 10 times',                   check:g=>(g.prestige||0)>=10}
 ];
 
 // STATE
@@ -84,7 +107,9 @@ let G={
   seenToday:{},
   dailyDoneCount:0,
   perfectQuizzes:0,
-  nightShiftDone:false
+  nightShiftDone:false,
+  scenIntroSeen:false,
+  prestige:0
 };
 
 // Load the saved game state, then BACKFILL any fields missing from older saves.
@@ -141,7 +166,7 @@ function logToday(questions,correct,quizzes,xp){
 function showLevelUp(level){
   const overlay=document.getElementById('levelUpOverlay');
   if(!overlay)return;
-  document.getElementById('luLevelName').textContent=level.name;
+  document.getElementById('luLevelName').textContent=level.name+prestigeStars(G.prestige);
   const card=document.getElementById('luCard');
   if(card)card.style.background=level.gradient;
   // Build confetti
@@ -545,14 +570,32 @@ function updateStats(){
   document.getElementById('tWrong').textContent=G.totalQ-G.totalCorrect;
   Object.keys(counts).forEach(k=>{const el=document.getElementById('dl'+k.charAt(0).toUpperCase()+k.slice(1));if(el)el.textContent=counts[k];});
   const lv=getLevel(G.xp),nxt=LEVELS[LEVELS.indexOf(lv)+1];
-  document.getElementById('lcName').textContent=lv.name;
+  document.getElementById('lcName').textContent=lv.name+prestigeStars(G.prestige);
   document.getElementById('levelCard').style.background=lv.gradient;
   if(nxt){
     document.getElementById('lcBar').style.width=((G.xp-lv.xp)/(lv.next-lv.xp)*100)+'%';
     document.getElementById('lcNext').textContent=`${lv.next-G.xp} XP to ${nxt.name}`;
   }else{
     document.getElementById('lcBar').style.width='100%';
-    document.getElementById('lcNext').textContent='Maximum level reached! 🎉';
+    document.getElementById('lcNext').textContent=G.prestige>0?'Maximum level reached again! 🎉':'Maximum level reached! 🎉';
+  }
+  // Prestige button: only visible at max level. Tapping it confirms, then resets the
+  // XP ladder (keeping all mastery/badges/notes/streak) and adds a permanent star.
+  const pBtn=document.getElementById('prestigeBtn');
+  if(pBtn){
+    if(atMaxLevel(G.xp)){
+      pBtn.style.display='block';
+      pBtn.textContent=G.prestige>0?`Prestige again (${G.prestige}×)`:'Prestige';
+      pBtn.onclick=()=>{
+        showConfirm(
+          'Prestige?',
+          'Your level resets to Rookie and you start climbing again, with a permanent star added to your level. Your mastered drugs, badges, notes and streak all stay exactly as they are.',
+          ()=>{ doPrestige(); updateStats(); showToast('✨ Prestige! A new star earned'); }
+        );
+      };
+    } else {
+      pBtn.style.display='none';
+    }
   }
   // Study time (approx 2 min per quiz)
   const mins=G.quizzes*2;
