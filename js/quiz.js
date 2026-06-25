@@ -203,18 +203,11 @@ function makeDailyQs() {
     const qt = EASY_Q[Math.floor(seededRnd(seed,i+100)*EASY_Q.length)];
     const correct = qt.a(d);
     const correctIdx = MEDS.indexOf(d);
-    // Build a shuffled pool of wrong indices — no while loop, no infinite loop risk
-    const pool = [];
-    for (let j = 0; j < MEDS.length; j++) {
-      if (j !== correctIdx) pool.push(j);
-    }
-    // Seeded shuffle of the pool
-    for (let j = pool.length - 1; j > 0; j--) {
-      const k = Math.floor(seededRnd(seed, i*500+j+300) * (j+1));
-      [pool[j], pool[k]] = [pool[k], pool[j]];
-    }
-    const wrongIdx = pool.slice(0, 3);
-    const wrong = wrongIdx.map(wi => qt.a(MEDS[wi]).split(';')[0].trim().substring(0,90));
+    // Use the same dedup-aware distractor logic as the main quiz so options are
+    // always distinct (fixes scope questions showing e.g. AP, AP, AP, EMT P AP).
+    // distractors() handles scope specially (returns the other valid scope values)
+    // and dedupes all other question types.
+    const wrong = distractors(qt, d, MEDS);
     const opts = [correct, ...wrong];
     // Seeded shuffle of options
     for (let j = opts.length-1; j > 0; j--) {
