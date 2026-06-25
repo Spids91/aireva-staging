@@ -1493,7 +1493,7 @@ ul { list-style: none; }
 .scen-reveal-btn:active { transform:scale(.98); }
 .scen-new-btn { background:var(--primary); color:#fff; border:none; }
 .scen-new-btn:active { transform:scale(.98); }
-.scen-reveal { display:flex; flex-direction:column; gap:14px; scroll-margin-top: calc(var(--sbh, env(safe-area-inset-top, 0px)) + 12px); }
+.scen-reveal { display:flex; flex-direction:column; gap:14px; scroll-margin-top: calc(var(--sbh, env(safe-area-inset-top, 0px)) + var(--hdr-h) + 12px); }
 .scen-reveal .scen-sec { border-color:var(--primary); border-width:1.5px; }
 .scen-reveal .scen-sec-title { color:var(--primary); }
 .scen-drugs { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }

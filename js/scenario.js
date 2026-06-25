@@ -381,7 +381,10 @@ function renderScenarioCard(sc) {
       const open = rv.style.display !== 'none';
       rv.style.display = open ? 'none' : 'block';
       rb.textContent = open ? 'Reveal Diagnosis & Management' : 'Hide Diagnosis & Management';
-      // Land the Diagnosis bubble near the top of the screen (not just barely in view).
+      // Land the Diagnosis bubble just below the sticky header. The header offset
+      // lives in CSS as `.scen-reveal { scroll-margin-top: --sbh + --hdr-h + 12px }`,
+      // which scrollIntoView respects natively (so it clears the status bar + header
+      // bar on both web and the iOS wrapper, where --sbh is injected at runtime).
       if (!open) {
         requestAnimationFrame(() => rv.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       }
