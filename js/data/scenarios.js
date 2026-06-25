@@ -1381,4 +1381,91 @@ const PRESENTATIONS = [
     },
   },
 
+  {
+    id: 'cardiacArrest',
+    name: 'Cardiac Arrest',
+    category: 'Resuscitation',
+    demographics: { minAge: 16, maxAge: 90, sex: 'any' },
+    variants: [
+      // V1: Basic Life Support — rhythm not yet determined (pads going on). The BLS spine.
+      { cause:'cardiac arrest, basic life support', conscious:false, arrestRhythm:'Not yet determined (pads being attached)',
+        dispatch:'You are called to {location} for a PATIENT who has collapsed and is not breathing.',
+        presentation:'Unresponsive, not breathing normally, no pulse. Bystanders are present and CPR is being attempted.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Unresponsive, not breathing normally, no palpable pulse.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Witnessed to collapse suddenly a few minutes ago, with bystander CPR started straight away.' },
+      // V2: VF / pulseless VT — shockable. The defibrillation pathway.
+      { cause:'cardiac arrest, VF or pulseless VT', conscious:false, arrestRhythm:'VF / pulseless VT (shockable)',
+        dispatch:'You are called to {location} for a PATIENT in cardiac arrest with CPR in progress.',
+        presentation:'Unresponsive, pulseless, not breathing. The monitor shows a shockable rhythm.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Unresponsive, pulseless, not breathing; monitor shows a shockable rhythm.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Clutched the chest and collapsed in front of bystanders, who began CPR immediately.' },
+      // V3: PEA — non-shockable, reversible-cause thinking. Cue seeded ~half the time.
+      { cause:'cardiac arrest, pulseless electrical activity', conscious:false, arrestRhythm:'PEA (organised rhythm, no pulse)',
+        dispatch:'You are called to {location} for a PATIENT who has collapsed and is unresponsive.',
+        presentation:'Unresponsive, pulseless, not breathing. The monitor shows organised electrical activity but there is no pulse.',
+        allergies:'Unknown.',
+        sample:{ symptoms:'Unresponsive, pulseless, not breathing; organised rhythm on the monitor with no output.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Collapsed and became unresponsive; bystanders started CPR.',
+        // Reversible-cause cues (4 Hs / 4 Ts) seeded into Events as a teaching nudge — the
+        // engine picks one at random some of the time; the student should connect it to a cause.
+        eventsCues:[
+          'Collapsed at a dialysis unit having missed recent sessions; bystanders started CPR.',         // hyperkalaemia
+          'Collapsed after heavy bleeding from a wound; bystanders started CPR.',                          // hypovolaemia
+          'Pulled from cold water a short time before collapsing; bystanders started CPR.',                // hypothermia / hypoxia
+          'Became severely breathless then collapsed; bystanders started CPR.',                            // hypoxia / PE
+          'Collapsed and became unresponsive; bystanders started CPR.' ],                                  // generic (no cue)
+      },
+    ],
+    painBased: false,
+    // No normal deviations — arrest variants render the arrest state. BGL still generated
+    // (a meaningful bedside check / reversible cause), defaults to a normal range.
+    deviations: {},
+    sample: {
+      symptoms:'Unresponsive, pulseless, not breathing.',
+      medications:'Unknown.',
+      pmh:'Unknown.',
+      lastIntake:'Unknown.',
+    },
+    opqrst: {
+      onset:'Sudden collapse.',
+      provocation:'Not applicable in arrest.',
+      quality:'Not applicable in arrest.',
+      radiates:'Not applicable.',
+      severity:'Not applicable.',
+      time:'At the time of collapse.',
+    },
+    reveal: {
+      diagnosis:'Cardiac arrest: unresponsive, not breathing normally, no pulse. Confirm the arrest, request ALS, and start high-quality CPR. The rhythm on the monitor directs the pathway, shockable (VF / pulseless VT) versus non-shockable (asystole / PEA).',
+      pathway:'Confirm the arrest and request ALS. Before commencing, confirm resuscitation is appropriate: it is inappropriate to start if there are definitive indicators of death (Recognition of Death CPG). Attach defibrillation pads and give continuous chest compressions while the defibrillator is prepared. Assess the rhythm. Shockable (VF / pulseless VT): give one shock, then immediately resume CPR for two minutes and reassess. Non-shockable (asystole / PEA): immediately resume CPR for two minutes and reassess, and seek and treat reversible causes. Maintain high-quality CPR throughout: rate 100 to 120 per minute, depth 5 to 6 cm, ventilations 500 to 600 mL, minimum interruptions, maximum hands-off time 10 seconds. Reassess every two minutes; on return of circulation, go to Post-Resuscitation Care.',
+      interventions:'High-quality CPR is the priority (rate 100 to 120 per minute, depth 5 to 6 cm, ventilations 500 to 600 mL, maximum hands-off 10 seconds). Defibrillate shockable rhythms, one shock then straight back to compressions. Manage the airway and give oxygen. Recognise the rhythm and reassess every two minutes; a pulse check only after two minutes of CPR if a potentially perfusing rhythm. Request ALS early. If an implantable defibrillator is fitted it is safe to touch the patient, treat per the CPG. Consider transport to ED if no change after 20 minutes and no ALS is available. Advanced Paramedics administer the arrest drugs.',
+      diagnosisBlocks: [
+        { type:'lead', body:'Cardiac arrest. Confirm, request ALS, start high-quality CPR. The monitor rhythm directs the pathway.' },
+        { type:'note', body:'Before commencing, confirm resuscitation is appropriate: it is inappropriate to start if there are definitive indicators of death (Recognition of Death CPG).' },
+      ],
+      pathwayBlocks: [
+        { type:'step', body:'Confirm the arrest. Request ALS. Attach defibrillation pads; continuous compressions while the defibrillator is prepared.' },
+        { type:'branch', label:'Shockable (VF / pulseless VT)', body:'Give one shock, then immediately resume CPR for two minutes and reassess.' },
+        { type:'branch', label:'Non-shockable (asystole / PEA)', body:'Immediately resume CPR for two minutes and reassess. Seek and treat reversible causes (4 Hs and 4 Ts).' },
+        { type:'step', body:'High-quality CPR throughout: 100 to 120 per minute, depth 5 to 6 cm, ventilations 500 to 600 mL, max hands-off 10 seconds.' },
+        { type:'note', body:'Reassess every two minutes. Return of circulation, go to Post-Resuscitation Care. Advanced Paramedics give the arrest drugs.' },
+      ],
+      interventionsBlocks: [
+        { type:'step', body:'High-quality CPR (100 to 120 per minute, 5 to 6 cm, ventilations 500 to 600 mL, max hands-off 10 seconds).' },
+        { type:'branch', label:'Shockable', body:'Defibrillate, one shock, then straight back to compressions.' },
+        { type:'step', body:'Airway management and oxygen. Reassess the rhythm every two minutes.' },
+        { type:'note', body:'Request ALS early. ICD fitted: safe to touch, treat per CPG. Consider ED transport if no change after 20 minutes and no ALS. Advanced Paramedics administer adrenaline and amiodarone.' },
+      ],
+      drugs: [
+        { name:'High-quality CPR & Defibrillation',
+          adult:{ paramedic:'CPR 100 to 120 per minute, depth 5 to 6 cm; defibrillate shockable rhythms, one shock then resume compressions.' } },
+        { name:'Oxygen / Airway',
+          adult:{ paramedic:'Airway management and oxygen therapy throughout.' } },
+        { name:'Arrest drugs',
+          adult:{ ap:'Advanced Paramedics administer adrenaline and amiodarone (refractory shockable rhythms).' } },
+      ],
+    },
+  },
+
 ];

@@ -131,6 +131,13 @@ function generateScenario(presId) {
   const bgl  = Array.isArray(d.bgl)  ? _rf(d.bgl[0], d.bgl[1])   : _rf(band.bgl[0], band.bgl[1]);
   const ecg = pres.ecg ? _pick(pres.ecg) : null;
 
+  // Cardiac arrest: a variant may declare `arrestRhythm` (e.g. 'VF / pulseless VT',
+  // 'PEA', 'Not yet determined'). When present, this patient is in arrest — pulseless,
+  // apnoeic/agonal, no meaningful BP/SpO2 — and the card shows the arrest STATE and the
+  // monitor rhythm instead of normal vital numbers (which would be clinically absurd
+  // for an arrest). Other presentations are unaffected (no arrestRhythm = normal vitals).
+  const arrest = variant.arrestRhythm ? { rhythm: variant.arrestRhythm } : null;
+
   // 4. Readable patient descriptor + a random (diagnosis-neutral) location for dispatch.
   const ageLabel = age < 1
                  ? band.label.replace(/^(\d+)\s+months?$/i, '$1-month-old').toLowerCase()
@@ -167,12 +174,21 @@ function generateScenario(presId) {
   const presentationText = (conscious && age < 3 && variant.presentationU3)
     ? variant.presentationU3
     : variant.presentation;
-  let events = variant.events;
-  if (!conscious) {
-    const frame = location.found
-      ? 'Found unresponsive by a bystander.'
-      : `Collapsed and became unresponsive at ${location.name}.`;
-    events = `${frame} ${variant.events}`;
+  // A variant may carry `eventsCues`: an array of alternative Events lines, one picked at
+  // random per run. Used to seed occasional teaching nudges (e.g. reversible-cause hints
+  // for PEA) while keeping most runs generic. Each cue is a self-contained scene sentence,
+  // so it is used as-is (no extra "found/collapsed" frame prepended).
+  let events;
+  if (Array.isArray(variant.eventsCues) && variant.eventsCues.length) {
+    events = _pick(variant.eventsCues);
+  } else {
+    events = variant.events;
+    if (!conscious) {
+      const frame = location.found
+        ? 'Found unresponsive by a bystander.'
+        : `Collapsed and became unresponsive at ${location.name}.`;
+      events = `${frame} ${variant.events}`;
+    }
   }
 
   // Last oral intake: an unresponsive patient can't tell you — Unknown is the honest,
@@ -268,7 +284,7 @@ function generateScenario(presId) {
       });
 
   return { pres, variant, age, sex, band, dispatch, ecg, conscious, location,
-           events, lastIntake, sample, opqrst, presentationText,
+           events, lastIntake, sample, opqrst, presentationText, arrest,
            vitals: { hr, rr, spo2, sys, dia, temp, bgl } };
 }
 
@@ -307,7 +323,15 @@ function renderScenarioCard(sc) {
   if (!sc) return;
   const v = sc.vitals, p = sc.pres, variant = sc.variant;
 
-  const vitalRows = [
+  // Cardiac arrest patients show the arrest STATE and monitor rhythm, not generated
+  // HR/BP/SpO2 numbers (a patient in arrest has no pulse, no spontaneous breathing, no
+  // meaningful SpO2 — showing normal-ish numbers would be clinically wrong).
+  const vitalRows = sc.arrest ? [
+    ['Pulse', 'Absent (pulseless)'],
+    ['Breathing', 'Absent or agonal'],
+    ['Monitor', sc.arrest.rhythm],
+    ['BGL', `${v.bgl} mmol/L`],
+  ] : [
     ['Heart Rate', `${v.hr} bpm`],
     ['Resp Rate', `${v.rr} /min`],
     ['SpO₂', `${v.spo2}%`],
@@ -315,7 +339,7 @@ function renderScenarioCard(sc) {
     ['BGL', `${v.bgl} mmol/L`],
     ['Temperature', `${v.temp}°C`],
   ];
-  if (sc.ecg) vitalRows.push(['ECG Rhythm', sc.ecg]);
+  if (sc.ecg && !sc.arrest) vitalRows.push(['ECG Rhythm', sc.ecg]);
 
   const sampleRows = [
     ['Signs/Symptoms', sc.sample.symptoms],
