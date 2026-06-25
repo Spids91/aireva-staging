@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.4 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.5 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -93,6 +93,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.5</h2>
+      <p>New presentation: Poisoning and Overdose, covering opioid, alcohol and other ingestions with the full PHECC management pathway. Poisoning patients now have realistic, case-specific histories: what they took, when, and their last food and drink, with the assessment questions answered the way a real patient would answer them. Respiratory rates in serious scenarios are now more clinically realistic, scaling correctly with the patient's age so a distressed infant and a distressed adult read differently. The diagnosis reveal now scrolls to sit neatly below the header instead of tucking underneath it. Plus smaller realism and polish fixes throughout.</p>
       <h2>v0.9.4</h2>
       <p>Scenarios are now patient-specific: each patient has their own medications, past history and symptoms rather than a generic summary. Medications use real brand names to encourage looking them up in Common Medications. New presentations: Burns and Stroke. Foreign Body Airway Obstruction is now conscious-only, keeping practice on the choking pathway. Scenarios no longer repeat the same presentation twice in a row. Stroke now models witnessed versus unwitnessed onset and last-known-well time. Chest pain, breathing and stroke scenarios reworded so the findings no longer give away the diagnosis. Many wording and realism fixes throughout.</p>
       <h2>v0.9.3</h2>
