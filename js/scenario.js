@@ -217,8 +217,13 @@ function generateScenario(presId) {
     }
     return { ...base, onset, time };
   }
-  const opqrst = !pres.opqrst ? null : (conscious
-    ? deriveTiming(variant, pres.opqrst)
+  // OPQRST base = presentation default, with any per-variant opqrst merged over it
+  // field-by-field (lets painBased presentations like ACS give each variant its own
+  // pain story). deriveTiming then applies on top for presentations that use the
+  // witness/onsetWhen timing machinery (e.g. stroke); for others it's a no-op.
+  const opqrstBase = pres.opqrst ? { ...pres.opqrst, ...(variant.opqrst || {}) } : null;
+  const opqrst = !opqrstBase ? null : (conscious
+    ? deriveTiming(variant, opqrstBase)
     : {
         onset: UNK_SHORT, provocation: UNK_SHORT, quality: UNK_SHORT,
         radiates: UNK_SHORT, severity: 'Unknown', time: UNK_SHORT,
