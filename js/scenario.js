@@ -152,14 +152,22 @@ function generateScenario(presId) {
   // while presentations not yet migrated keep their shared default.
   const vs = variant.sample || {};
   const ps = pres.sample;
-  // Unwitnessed onset (patient found alone) → last-known-well is genuinely unknown,
-  // which is itself clinically important (often excludes the thrombolysis window).
-  // This overrides any sample lastIntake for that variant.
-  const lastIntake = !conscious
-    ? 'Unknown, patient unresponsive, no reliable history.'
-    : variant.witness === 'unwitnessed'
-      ? 'Unknown, the patient was found alone and the time of onset is unwitnessed.'
-      : (vs.lastIntake || ps.lastIntake);
+  // Last-known-well wording carries the witness/reliability angle (distinct from the
+  // OPQRST clock). For a witnessed patient with an onsetWhen value, the clock time is
+  // derived from that single source (onsetWhen) so it can't drift from OPQRST Time.
+  // Unwitnessed → genuinely unknown (clinically important: often excludes the window).
+  let lastIntake;
+  if (!conscious) {
+    lastIntake = 'Unknown, patient unresponsive, no reliable history.';
+  } else if (variant.witness === 'unwitnessed') {
+    lastIntake = 'Unknown, the patient was found alone and the time of onset is unwitnessed.';
+  } else if (variant.witness === 'witnessed' && variant.onsetWhen) {
+    lastIntake = `A witness was present and saw them well ${variant.onsetWhen}.`;
+  } else if (variant.witness === 'witnessed' && variant.wakeUp) {
+    lastIntake = 'Was seen well last night before bed; woke with the symptoms, so the exact onset overnight is unknown.';
+  } else {
+    lastIntake = vs.lastIntake || ps.lastIntake;
+  }
 
   // For an UNCONSCIOUS patient, almost no reliable history is obtainable — the student's
   // learning is to assess (vitals/BGL), NOT to interrogate a bystander and hope they
@@ -182,10 +190,39 @@ function generateScenario(presId) {
     lastIntake:  lastIntake,   // already the unresponsive message
   };
   // OPQRST: also Unknown for unconscious (can't self-report pain/onset/etc).
-  const opqrst = !pres.opqrst ? null : (conscious ? pres.opqrst : {
-    onset: UNK_SHORT, provocation: UNK_SHORT, quality: UNK_SHORT,
-    radiates: UNK_SHORT, severity: 'Unknown', time: UNK_SHORT,
-  });
+  // OPQRST. Non-timing fields (provocation/quality/radiates/severity) are shared from
+  // the presentation. The two TIMING fields (onset, time) are DERIVED per-variant from
+  // the witness type + an optional onsetWhen value, so they can never contradict the
+  // SAMPLE last-known-well (one source of truth) and each says something distinct:
+  //   onset = onset character (sudden + witnessed/not); time = WHEN it started (onset-
+  //   anchored, not duration, because the stroke window is measured from time of onset).
+  // onsetWhen lives on the variant and also feeds the witnessed lastIntake below.
+  function deriveTiming(v, base) {
+    if (!base) return base;
+    const when = v.onsetWhen;                 // e.g. 'about 40 minutes ago' (witnessed only)
+    let onset, time;
+    if (v.witness === 'unwitnessed') {
+      onset = 'Sudden onset, but not witnessed, the patient was found already affected.';
+      time  = 'Time of onset unknown; the patient was found already symptomatic.';
+    } else if (v.wakeUp) {                     // wake-up: witnessed-well last night, onset unobserved
+      onset = 'Symptoms present on waking, so the onset was not observed.';
+      time  = 'Last known well last night; the symptoms were already present on waking.';
+    } else if (when) {                         // witnessed with a known clock time
+      onset = 'Sudden onset, witnessed.';
+        time  = v.improving
+          ? `Symptoms started ${when} and have been improving since.`
+          : `Symptoms started ${when} and are ongoing.`;
+    } else {
+      return base;                            // no timing metadata → use shared fields unchanged
+    }
+    return { ...base, onset, time };
+  }
+  const opqrst = !pres.opqrst ? null : (conscious
+    ? deriveTiming(variant, pres.opqrst)
+    : {
+        onset: UNK_SHORT, provocation: UNK_SHORT, quality: UNK_SHORT,
+        radiates: UNK_SHORT, severity: 'Unknown', time: UNK_SHORT,
+      });
 
   return { pres, variant, age, sex, band, dispatch, ecg, conscious, location,
            events, lastIntake, sample, opqrst, presentationText,
