@@ -512,39 +512,41 @@ const PRESENTATIONS = [
     category: 'Airway and Breathing',
     demographics: { minAge: 16, maxAge: 90, sex: 'any' },
     variants: [
-      // SEVERE + CONSCIOUS → back blows / abdominal thrusts.
-      { cause:'choking on food, severe, conscious', conscious:true,
-        dispatch:'You are called to {location} for a PATIENT who is choking.',
+      // All conscious. FBAO-specific teaching is the conscious pathway (encourage
+      // cough / back blows / abdominal thrusts). Unconscious cases were removed
+      // deliberately: they hand off to BLS/CPR, a different CPG not tested here.
+      // Dispatches are mostly scene-based (not "choking") so the student does the
+      // recognising rather than being handed the diagnosis.
+      { cause:'severe obstruction, conscious (food bolus)', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT having difficulty breathing during a meal.',
         presentation:'Clutching at their throat, distressed and unable to speak, coughing weakly and ineffectively, lips dusky, eyes wide and frightened. Still conscious and trying to cough.',
         allergies:'No known drug allergies.',
         events:'Choked suddenly partway through a meal; bystanders saw them grab their throat and struggle to breathe.' },
-      { cause:'choking, severe, near-silent', conscious:true,
-        dispatch:'You are called to {location} for a PATIENT in respiratory distress, unable to talk.',
+      { cause:'severe obstruction, near-silent', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT in sudden respiratory distress, unable to talk.',
         presentation:'Silent, cannot cough or speak, gripping the throat, pale and panicked, making minimal air movement. Conscious but visibly tiring.',
         allergies:'No known drug allergies.',
         events:'Was eating when they suddenly went quiet and could not breathe; a bystander recognised choking and called immediately.' },
-      // MILD → encourage cough, monitor.
       { cause:'mild obstruction, effective cough', conscious:true,
-        dispatch:'You are called to {location} for a PATIENT who choked but is still coughing.',
+        dispatch:'You are called to {location} for a PATIENT who is choking but still able to cough.',
         presentation:'Coughing forcefully and effectively, able to speak in short sentences between coughs, anxious but moving good air, colour normal. Airway partially obstructed but cough is effective.',
         allergies:'No known drug allergies.',
         events:'Choked on food a few minutes ago and has been coughing hard since; able to tell you what happened.' },
-      // SEVERE + UNCONSCIOUS → request ALS, CPR cycles, mouth check.
-      { cause:'choking, now unconscious', conscious:false,
-        dispatch:'You are called to {location} for a PATIENT who was choking and has collapsed.',
-        presentation:'Unresponsive, not breathing effectively, cyanosed around the lips, no cough or gag. Airway obstructed; no air movement.',
+      { cause:'severe obstruction, conscious (restaurant)', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT who suddenly cannot speak while eating out.',
+        presentation:'Grasping at the throat, red-faced and panicking, unable to speak or cough effectively, but still conscious and upright. Severe obstruction, no effective air movement.',
         allergies:'No known drug allergies.',
-        events:'Was choking on food and witnessed to slump unconscious moments before your arrival.' },
-      { cause:'found collapsed, suspected FBAO', conscious:false,
-        dispatch:'You are called to {location} for a PATIENT found unresponsive after a meal.',
-        presentation:'Unresponsive, cyanosed, no effective breathing, food debris around the mouth. No cough or gag; airway appears obstructed.',
+        events:'Choking began suddenly on a large mouthful of food while eating out; bystanders recognised it immediately.' },
+      { cause:'mild obstruction, forceful cough', conscious:true,
+        dispatch:'You are called to {location} for a PATIENT coughing forcefully after eating.',
+        presentation:'Coughing hard and able to speak between coughs, distressed but moving good air, colour normal. Effective cough, mild obstruction.',
         allergies:'No known drug allergies.',
-        events:'Found slumped at the table shortly after eating; suspected choking.' },
-      { cause:'choking, peri-arrest', conscious:false,
-        dispatch:'You are called to {location} for an unconscious PATIENT who was choking.',
-        presentation:'Unresponsive and deeply cyanosed, no effective ventilation despite airway manoeuvres, agonal at best. Obstruction unresolved.',
+        events:'Choked on a piece of food a few minutes ago and has been coughing strongly since, able to describe what happened.' },
+      { cause:'severe obstruction, partially relieved', conscious:true,
+        dispatch:'You are called to {location} for a choking PATIENT, bystanders are helping.',
+        presentation:'Still distressed with an ineffective cough, some air movement after bystander back blows but the obstruction is not cleared, conscious and frightened. Severe and ongoing.',
         allergies:'No known drug allergies.',
-        events:'Choked, then rapidly deteriorated to unconsciousness; bystander CPR was just starting as you arrived.' },
+        events:'Choked on food; a bystander has been delivering back blows with partial effect, but the obstruction persists.' },
     ],
     painBased: false,   // FBAO is not a pain complaint → OPQRST shows honest negatives
     // ⚠️ PLACEHOLDER deviations — Keith approved direction; ranges paint a hypoxic
