@@ -135,7 +135,14 @@ function generateScenario(presId) {
 
   // Last oral intake: an unresponsive patient can't tell you — Unknown is the honest,
   // realistic value rather than fabricating a history.
-  const lastIntake = conscious ? pres.sample.lastIntake : 'Unknown, patient unresponsive, no reliable history.';
+  // A variant can supply its own `sample` object (patient-specific medications, PMH,
+  // symptoms, lastIntake) which overrides the presentation default field-by-field;
+  // anything the variant omits falls back to pres.sample. This lets each patient have
+  // a realistic, individual history (e.g. a stroke patient on a named anticoagulant)
+  // while presentations not yet migrated keep their shared default.
+  const vs = variant.sample || {};
+  const ps = pres.sample;
+  const lastIntake = conscious ? (vs.lastIntake || ps.lastIntake) : 'Unknown, patient unresponsive, no reliable history.';
 
   // For an UNCONSCIOUS patient, almost no reliable history is obtainable — the student's
   // learning is to assess (vitals/BGL), NOT to interrogate a bystander and hope they
@@ -145,10 +152,10 @@ function generateScenario(presId) {
   const UNK = 'Unknown, no reliable history available.';
   const UNK_SHORT = 'Unknown';
   const sample = conscious ? {
-    symptoms:    pres.sample.symptoms,
+    symptoms:    vs.symptoms    || ps.symptoms,
     allergies:   variant.allergies,
-    medications: pres.sample.medications,
-    pmh:         pres.sample.pmh,
+    medications: vs.medications || ps.medications,
+    pmh:         vs.pmh         || ps.pmh,
     lastIntake:  lastIntake,
   } : {
     symptoms:    UNK,
