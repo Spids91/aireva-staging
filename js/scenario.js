@@ -9,6 +9,20 @@ function _ri(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; } 
 function _rf(lo, hi) { return Math.round((Math.random() * (hi - lo) + lo) * 10) / 10; } // 1-dp float
 function _pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// Remembers the last presentation shown so the random picker never serves the
+// same presentation twice in a row. True random feels "broken" to users because
+// it clumps (with 7 presentations, ~1 in 7 picks repeats the previous one); this
+// guard removes that perceived repetition while keeping selection otherwise random.
+// Only applies to random selection; an explicitly requested presId is unaffected.
+let _lastPresId = null;
+function _pickPresentation() {
+  if (PRESENTATIONS.length <= 1) return PRESENTATIONS[0];   // can't avoid a repeat with one option
+  let p;
+  do { p = _pick(PRESENTATIONS); } while (p.id === _lastPresId);
+  _lastPresId = p.id;
+  return p;
+}
+
 // First vital age-band whose age >= patient age.
 function scenVitalBand(age) {
   return SCEN_VITALS.find(b => age <= b.age) || SCEN_VITALS[SCEN_VITALS.length - 1];
@@ -41,7 +55,7 @@ function applyRelative(range, dev, age) {
 
 // ── CORE GENERATOR ───────────────────────────────────────────────────────────────
 function generateScenario(presId) {
-  const pres = presId ? PRESENTATIONS.find(p => p.id === presId) : _pick(PRESENTATIONS);
+  const pres = presId ? PRESENTATIONS.find(p => p.id === presId) : _pickPresentation();
   if (!pres) return null;
 
   // 1. Patient within demographic constraints.
@@ -57,7 +71,11 @@ function generateScenario(presId) {
   // 3. Vitals. Relative vitals (hr/rr/bpSys/bpDia) use age-scaled % shifts; absolute
   //    vitals (spo2/temp/bgl) use direct target ranges; anything omitted stays normal.
   const band = scenVitalBand(age);
-  const d = pres.deviations || {};
+  // Deviations are normally presentation-level. A single variant can override them
+  // with its own `vitalsOverride` object (same shape as deviations) so one outlier
+  // variant can read distinctly sicker/healthier than its siblings (e.g. a
+  // catastrophic large-burn-plus-inhalation case). Absent override = unchanged.
+  const d = variant.vitalsOverride || pres.deviations || {};
   const hr  = d.hr  ? applyRelative(band.hr, d.hr, age) : _ri(band.hr[0], band.hr[1]);
   const rr  = d.rr  ? applyRelative(band.rr, d.rr, age) : _ri(band.rr[0], band.rr[1]);
   const sys = d.bpSys ? applyRelative([band.bp[0], band.bp[1]], d.bpSys, age) : _ri(band.bp[0], band.bp[1]);
@@ -224,9 +242,13 @@ function renderScenarioCard(sc) {
   const isAdult = sc.age > 15;
   const drugLines = (p.reveal.drugs || []).map(dr => {
     const d = isAdult ? (dr.adult || dr) : (dr.paed || dr);
+    // paramedic route shown as the main line; ap route (if any) as the amber pill.
+    // Some drugs are AP-only (no paramedic route) — show just the name + AP pill,
+    // never leak "undefined".
+    const main = d.paramedic ? ` &mdash; ${d.paramedic}` : '';
     return `
     <li>
-      <strong>${dr.name}</strong> &mdash; ${d.paramedic}
+      <strong>${dr.name}</strong>${main}
       ${d.ap ? `<span class="scen-ap-pill">AP only: ${d.ap}</span>` : ''}
     </li>`;
   }).join('');
