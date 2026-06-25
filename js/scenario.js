@@ -38,18 +38,36 @@ function scenMaxPct(age) {
 //   dir 'down' → drop below the floor by the same proportion
 // Severity is randomised 0.5–1.0 of the requested intensity so scenarios vary
 // moderate→severe and never repeat the same number.
+// A deviation may carry an optional `cap` (for 'up') or `floor` (for 'down') to bound
+// the result at a clinically plausible limit. Each may be:
+//   • a NUMBER  → a flat ceiling/floor for all ages, or
+//   • an ARRAY of {age, val} bands → an AGE-SCALED limit (e.g. a tachypnoeic infant
+//     can breathe faster than an adult, so RR caps higher for the young). The band whose
+//     `age` is the first >= the patient's age is used (same convention as DEV_PCT_BANDS).
+// Resolves to a number via resolveLimit().
+function resolveLimit(limit, age) {
+  if (limit == null) return null;
+  if (typeof limit === 'number') return limit;
+  const b = limit.find(x => age <= x.age) || limit[limit.length - 1];
+  return b ? b.val : null;
+}
 function applyRelative(range, dev, age) {
   const [lo, hi] = range;
   const maxPct = scenMaxPct(age) / 100;
   const severity = 0.5 + Math.random() * 0.5;        // 0.5–1.0
   const shiftFrac = maxPct * dev.intensity * severity;
   if (dev.dir === 'up') {
-    const target = Math.round(hi * (1 + shiftFrac));
-    // sit somewhere between just-over-ceiling and the target, for spread
-    return _ri(hi + 1, Math.max(hi + 2, target));
+    const cap = resolveLimit(dev.cap, age);
+    let target = Math.round(hi * (1 + shiftFrac));
+    if (cap != null) target = Math.min(target, cap);            // clinical ceiling
+    const top = Math.max(hi + 2, target);
+    return _ri(hi + 1, cap != null ? Math.min(top, cap) : top);
   } else {
-    const target = Math.round(lo * (1 - shiftFrac));
-    return _ri(Math.min(lo - 2, target), lo - 1);
+    const floor = resolveLimit(dev.floor, age);
+    let target = Math.round(lo * (1 - shiftFrac));
+    if (floor != null) target = Math.max(target, floor);        // clinical floor
+    const bot = Math.min(lo - 2, target);
+    return _ri(floor != null ? Math.max(bot, floor) : bot, lo - 1);
   }
 }
 
@@ -174,6 +192,12 @@ function generateScenario(presId) {
   // mention "diabetic". So SAMPLE/OPQRST default to "Unknown" — EXCEPT Events Leading Up,
   // which can carry the witnessed-collapse framing (a bystander plausibly saw them go
   // down even if they know nothing else about them).
+  //
+  // EXCEPTION: a variant may explicitly supply `sample` fields for an unconscious patient
+  // to model a family-present-at-home scenario, where a relative can give a brief (often
+  // vague) history. Any field the variant provides is used; anything omitted stays Unknown.
+  // This keeps the BGL-check teaching intact (history may be vague/absent) while allowing
+  // realistic variation between "found alone, nothing known" and "family gave a history".
   const UNK = 'Unknown, no reliable history available.';
   const UNK_SHORT = 'Unknown';
   const sample = conscious ? {
@@ -183,11 +207,11 @@ function generateScenario(presId) {
     pmh:         vs.pmh         || ps.pmh,
     lastIntake:  lastIntake,
   } : {
-    symptoms:    UNK,
-    allergies:   UNK_SHORT,
-    medications: UNK_SHORT,
-    pmh:         UNK_SHORT,
-    lastIntake:  lastIntake,   // already the unresponsive message
+    symptoms:    vs.symptoms    || UNK,
+    allergies:   variant.allergies || UNK_SHORT,
+    medications: vs.medications || UNK_SHORT,
+    pmh:         vs.pmh         || UNK_SHORT,
+    lastIntake:  vs.lastIntake || lastIntake,   // explicit > unresponsive default
   };
   // OPQRST: also Unknown for unconscious (can't self-report pain/onset/etc).
   // OPQRST. Non-timing fields (provocation/quality/radiates/severity) are shared from

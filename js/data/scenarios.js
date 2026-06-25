@@ -230,7 +230,7 @@ const PRESENTATIONS = [
     // ⚠️ PLACEHOLDER deviations — Keith to verify direction + intensity.
     deviations: {
       hr:    { dir:'up',   intensity:0.7 },   // tachycardia
-      rr:    { dir:'up',   intensity:0.6 },   // tachypnoea
+      rr:    { dir:'up',   intensity:2.1, cap:[ {age:1, val:80}, {age:5, val:50}, {age:11, val:44}, {age:15, val:56}, {age:120, val:62} ] },   // severe tachypnoea, age-scaled ceiling
       bpSys: { dir:'down', intensity:0.5 },   // hypotension
       bpDia: { dir:'down', intensity:0.5 },
       spo2:  [85, 93],                        // absolute hypoxia target
@@ -310,35 +310,41 @@ const PRESENTATIONS = [
         presentation:'Alert but confused and sweaty, pale and clammy, slurred speech, but able to talk, follow simple instructions and hold a cup. Airway is their own and they can swallow.',
         presentationU3:'Drowsy and floppy, pale and clammy with profuse sweating, whimpering and not interacting as the parents say they normally would, but rousable, moving all limbs, and still able to swallow. Airway is their own.',
         allergies:'No known drug allergies.',
+        sample:{ symptoms:'Confused and sweaty, pale and clammy, slurred speech, but able to talk and hold a cup, airway own and can swallow.', medications:'Lantus and NovoRapid.', pmh:'Type 1 diabetes.' },
         events:'Took their usual insulin this morning but skipped breakfast; became increasingly confused over the last half hour.' },
       { cause:'odd behaviour, conscious', conscious:true,
         dispatch:'You are called to {location} for a PATIENT who is behaving strangely.',
         presentation:'Confused and agitated but awake and responsive, sweating heavily, unsteady, almost intoxicated in manner though no alcohol involved. Able to protect their own airway and swallow.',
         presentationU3:'Awake but irritable and inconsolable, sweating heavily, jittery and unsteady, not behaving like their usual self according to the parents. Rousable and responsive, protecting their own airway and able to swallow.',
         allergies:'No known drug allergies.',
+        sample:{ symptoms:'Confused and agitated, awake and responsive, sweating heavily, unsteady, appears almost intoxicated though no alcohol. Protects own airway, can swallow.', medications:'Diamicron.', pmh:'Type 2 diabetes.' },
         events:'Has been increasingly muddled and clumsy over the past 20 minutes; this reportedly happens if they go too long without eating.' },
       { cause:'exercise-related, conscious', conscious:true,
         dispatch:'You are called to {location} for a PATIENT who has gone pale and shaky.',
         presentation:'Sweaty, trembling and pale, anxious and a little muddled but fully awake, answering questions slowly. Airway is their own and they can swallow.',
         presentationU3:'Sweaty, pale and trembling, clingy and unsettled and not their usual self according to the parents, but fully awake, rousable and able to swallow. Airway is their own.',
         allergies:'No known drug allergies.',
+        sample:{ symptoms:'Sweaty, trembling and pale, anxious and a little muddled but fully awake, answering slowly. Airway own, can swallow.', medications:'Levemir and NovoRapid.', pmh:'Type 1 diabetes, well controlled.' },
         events:'Known diabetic on insulin; took the usual dose then did far more physical activity than normal without eating extra, and started feeling shaky and confused over the last 20 minutes.' },
       // UNCONSCIOUS / unable to swallow → leads toward IM glucagon.
       { cause:'collapse, unresponsive', conscious:false,
         dispatch:'You are called to {location} for a PATIENT who has collapsed.',
         presentation:'Slumped and unresponsive to voice, only groaning to a painful stimulus, profuse sweating, cool clammy skin. NOT able to swallow or protect their own airway.',
         allergies:'No known drug allergies.',
-        events:'Was reportedly well earlier, then became vacant and slumped over a short time ago.' },
+        sample:{ symptoms:'Slumped, unresponsive to voice, groans to pain, profuse sweating, cool clammy skin. Not protecting airway, cannot swallow.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
+        events:'Witnessed by passers-by to be well earlier, then became vacant and slumped over a short time ago. No medical history available.' },
       { cause:'unresponsive', conscious:false,
         dispatch:'You are called to {location} for a PATIENT who is unconscious.',
         presentation:'Unrousable to voice, withdraws to pain only, sweaty and pale, breathing on their own. Cannot swallow safely, no gag/airway protection.',
         allergies:'No known drug allergies.',
-        events:'Known diabetic on insulin; became unresponsive a short time ago.' },
+        sample:{ symptoms:'Unrousable to voice, withdraws to pain, sweaty and pale, breathing spontaneously. No airway protection, cannot swallow safely.', medications:'Diabetic, on injections (family unsure of the names).', pmh:'Diabetes (per family).', lastIntake:'Unknown.' },
+        events:'Known diabetic; became unresponsive a short time ago, family present and able to give a brief history.' },
       { cause:'found drowsy at home, unresponsive', conscious:false,
         dispatch:'You are called to {location} for a PATIENT who cannot be roused.',
         presentation:'Deeply drowsy, responds only to a painful stimulus with a groan, profusely sweaty with cold clammy skin, breathing on their own. NOT able to swallow or protect their own airway.',
         allergies:'No known drug allergies.',
-        events:'Known diabetic; family noticed they had become harder and harder to wake over the last hour.' },
+        sample:{ symptoms:'Deeply drowsy, responds to pain with a groan, profusely sweaty, cold clammy skin, breathing spontaneously. Not protecting airway, cannot swallow.', medications:'Diabetic, on injections (family unsure of the names).', pmh:'Diabetes (per family).', lastIntake:'Family think they ate little today.' },
+        events:'Family noticed they had become harder and harder to wake over the last hour; family present at home and able to give a brief history.' },
     ],
     painBased: false,   // hypoglycaemia is not a pain complaint → OPQRST shows honest negatives
     // ⚠️ PLACEHOLDER deviations — Keith to verify.
@@ -351,9 +357,9 @@ const PRESENTATIONS = [
       // rr / bp / spo2 / temp omitted → stay normal
     },
     sample: {
-      symptoms:'Confusion, sweating, tremor, hunger, slurred speech, altered behaviour.',
-      medications:'Insulin (and/or oral hypoglycaemic agents).',
-      pmh:'Type 1 (or insulin-treated) diabetes mellitus.',
+      symptoms:'Altered mental state with sweating and pallor; presentation varies with conscious level.',
+      medications:'Varies; see patient history.',
+      pmh:'Varies; see patient history.',
       lastIntake:'Missed or inadequate food intake relative to insulin/medication.',
     },
     opqrst: {
