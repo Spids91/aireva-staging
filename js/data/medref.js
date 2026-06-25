@@ -13,8 +13,8 @@ const MEDREF = [
   { generic:'Rivaroxaban', brands:['Xarelto'], indication:'Anticoagulant — AF, DVT/PE treatment & prevention', category:'Anticoagulants & Antiplatelets' },
   { generic:'Dabigatran', brands:['Pradaxa'], indication:'Anticoagulant — stroke prevention in AF, DVT/PE', category:'Anticoagulants & Antiplatelets' },
   { generic:'Edoxaban', brands:['Lixiana'], indication:'Anticoagulant — AF, DVT/PE', category:'Anticoagulants & Antiplatelets' },
-  { generic:'Warfarin', brands:['Coumadin','Marevan'], indication:'Anticoagulant — AF, mechanical valves, DVT/PE', category:'Anticoagulants & Antiplatelets' },
-  { generic:'Clopidogrel', brands:['Plavix'], indication:'Antiplatelet — post-MI, stroke, stent', category:'Anticoagulants & Antiplatelets' },
+  { generic:'Warfarin', brands:['Warfant','Warfarin Teva'], indication:'Anticoagulant — AF, mechanical valves, DVT/PE', category:'Anticoagulants & Antiplatelets' },
+  { generic:'Clopidogrel', brands:['Plavix','Clodel','Grepid','Iscover','Zyllt'], indication:'Antiplatelet — post-MI, stroke, stent', category:'Anticoagulants & Antiplatelets' },
   { generic:'Ticagrelor', brands:['Brilique'], indication:'Antiplatelet — acute coronary syndrome', category:'Anticoagulants & Antiplatelets' },
   { generic:'Prasugrel', brands:['Efient'], indication:'Antiplatelet — ACS with stent', category:'Anticoagulants & Antiplatelets' },
   { generic:'Aspirin', brands:['Disprin','Aspro'], indication:'Antiplatelet — cardiovascular protection', category:'Anticoagulants & Antiplatelets' },
@@ -23,15 +23,15 @@ const MEDREF = [
   { generic:'Tinzaparin', brands:['Innohep'], indication:'Low molecular weight heparin — DVT/PE', category:'Anticoagulants & Antiplatelets' },
 
   // ── CARDIOVASCULAR ──────────────────────────────────────────────────────────
-  { generic:'Ramipril', brands:['Tritace'], indication:'ACE inhibitor — hypertension, heart failure', category:'Cardiovascular' },
+  { generic:'Ramipril', brands:['Tritace','Ramilo','Ramitace'], indication:'ACE inhibitor — hypertension, heart failure', category:'Cardiovascular' },
   { generic:'Lisinopril', brands:['Zestril'], indication:'ACE inhibitor — hypertension, heart failure', category:'Cardiovascular' },
-  { generic:'Perindopril', brands:['Coversyl'], indication:'ACE inhibitor — hypertension, heart failure', category:'Cardiovascular' },
+  { generic:'Perindopril', brands:['Coversyl','Pendrex'], indication:'ACE inhibitor — hypertension, heart failure', category:'Cardiovascular' },
   { generic:'Enalapril', brands:['Innovace','Renitec'], indication:'ACE inhibitor — hypertension, heart failure', category:'Cardiovascular' },
   { generic:'Losartan', brands:['Cozaar'], indication:'ARB — hypertension, heart failure', category:'Cardiovascular' },
   { generic:'Valsartan', brands:['Diovan'], indication:'ARB — hypertension, heart failure', category:'Cardiovascular' },
   { generic:'Candesartan', brands:['Atacand'], indication:'ARB — hypertension, heart failure', category:'Cardiovascular' },
   { generic:'Irbesartan', brands:['Aprovel'], indication:'ARB — hypertension', category:'Cardiovascular' },
-  { generic:'Amlodipine', brands:['Istin','Norvasc'], indication:'Calcium channel blocker — hypertension, angina', category:'Cardiovascular' },
+  { generic:'Amlodipine', brands:['Istin','Amlode','Amlotan'], indication:'Calcium channel blocker — hypertension, angina', category:'Cardiovascular' },
   { generic:'Felodipine', brands:['Plendil'], indication:'Calcium channel blocker — hypertension', category:'Cardiovascular' },
   { generic:'Diltiazem', brands:['Tildiem','Cardizem'], indication:'Calcium channel blocker — angina, hypertension, rate control', category:'Cardiovascular' },
   { generic:'Verapamil', brands:['Isoptin','Securon'], indication:'Calcium channel blocker — arrhythmia, angina', category:'Cardiovascular' },
@@ -62,7 +62,7 @@ const MEDREF = [
   { generic:'Amiloride', brands:['Amilamont'], indication:'Potassium-sparing diuretic', category:'Diuretics' },
 
   // ── RESPIRATORY ─────────────────────────────────────────────────────────────
-  { generic:'Salbutamol', brands:['Ventolin','Airomir'], indication:'Beta-2 agonist — asthma, COPD reliever', category:'Respiratory' },
+  { generic:'Salbutamol', brands:['Ventolin','Airomir','Salamol','Salbul'], indication:'Beta-2 agonist — asthma, COPD reliever', category:'Respiratory' },
   { generic:'Terbutaline', brands:['Bricanyl'], indication:'Beta-2 agonist — asthma reliever', category:'Respiratory' },
   { generic:'Salmeterol', brands:['Serevent'], indication:'Long-acting beta agonist — asthma, COPD', category:'Respiratory' },
   { generic:'Formoterol', brands:['Oxis','Atimos'], indication:'Long-acting beta agonist — asthma, COPD', category:'Respiratory' },
@@ -99,7 +99,7 @@ const MEDREF = [
   // ── THYROID & HORMONAL ──────────────────────────────────────────────────────
   { generic:'Levothyroxine', brands:['Eltroxin','Euthyrox'], indication:'Hypothyroidism', category:'Thyroid & Hormonal' },
   { generic:'Carbimazole', brands:['Neo-Mercazole'], indication:'Hyperthyroidism', category:'Thyroid & Hormonal' },
-  { generic:'Prednisolone', brands:['Deltacortril'], indication:'Corticosteroid — inflammation, autoimmune, COPD/asthma', category:'Thyroid & Hormonal' },
+  { generic:'Prednisolone', brands:['Deltacortril','Prednesol'], indication:'Corticosteroid — inflammation, autoimmune, COPD/asthma', category:'Thyroid & Hormonal' },
   { generic:'Hydrocortisone', brands:['Solu-Cortef'], indication:'Corticosteroid — adrenal insufficiency, anaphylaxis', category:'Thyroid & Hormonal' },
   { generic:'Dexamethasone', brands:['Decadron'], indication:'Corticosteroid — inflammation, cerebral oedema', category:'Thyroid & Hormonal' },
   { generic:'Fludrocortisone', brands:['Florinef'], indication:'Mineralocorticoid — adrenal insufficiency', category:'Thyroid & Hormonal' },
@@ -107,14 +107,15 @@ const MEDREF = [
   { generic:'Finasteride', brands:['Proscar','Propecia'], indication:'BPH, hair loss', category:'Thyroid & Hormonal' },
 
   // ── MENTAL HEALTH & PSYCHIATRY ──────────────────────────────────────────────
-  { generic:'Sertraline', brands:['Lustral','Zoloft'], indication:'SSRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
+  { generic:'Sertraline', brands:['Lustral','Depreger','Seretral','Serimel','Serlan'], indication:'SSRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
   { generic:'Citalopram', brands:['Cipramil'], indication:'SSRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
+  { generic:'Escitalopram', brands:['Lexapro','Etalopro','Esciprex','Escitalpro'], indication:'SSRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
   { generic:'Escitalopram', brands:['Lexapro','Cipralex'], indication:'SSRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
   { generic:'Fluoxetine', brands:['Prozac'], indication:'SSRI antidepressant — depression, OCD', category:'Mental Health & Psychiatry' },
   { generic:'Paroxetine', brands:['Seroxat'], indication:'SSRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
-  { generic:'Venlafaxine', brands:['Efexor'], indication:'SNRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
-  { generic:'Duloxetine', brands:['Cymbalta'], indication:'SNRI — depression, neuropathic pain', category:'Mental Health & Psychiatry' },
-  { generic:'Mirtazapine', brands:['Zispin'], indication:'Antidepressant — depression, insomnia', category:'Mental Health & Psychiatry' },
+  { generic:'Venlafaxine', brands:['Efexor','Efexor XL'], indication:'SNRI antidepressant — depression, anxiety', category:'Mental Health & Psychiatry' },
+  { generic:'Duloxetine', brands:['Cymbalta','Loxentia','Yentreve'], indication:'SNRI — depression, neuropathic pain', category:'Mental Health & Psychiatry' },
+  { generic:'Mirtazapine', brands:['Zispin','Mirap','Zismirt'], indication:'Antidepressant — depression, insomnia', category:'Mental Health & Psychiatry' },
   { generic:'Amitriptyline', brands:['Elavil'], indication:'Tricyclic — depression, neuropathic pain', category:'Mental Health & Psychiatry' },
   { generic:'Trazodone', brands:['Molipaxin'], indication:'Antidepressant — depression, insomnia', category:'Mental Health & Psychiatry' },
   { generic:'Quetiapine', brands:['Seroquel'], indication:'Antipsychotic — schizophrenia, bipolar', category:'Mental Health & Psychiatry' },
@@ -124,11 +125,11 @@ const MEDREF = [
   { generic:'Haloperidol', brands:['Haldol','Serenace'], indication:'Antipsychotic — psychosis, agitation', category:'Mental Health & Psychiatry' },
   { generic:'Clozapine', brands:['Clozaril'], indication:'Antipsychotic — treatment-resistant schizophrenia', category:'Mental Health & Psychiatry' },
   { generic:'Lithium', brands:['Priadel','Camcolit'], indication:'Mood stabiliser — bipolar disorder', category:'Mental Health & Psychiatry' },
-  { generic:'Diazepam', brands:['Valium'], indication:'Benzodiazepine — anxiety, seizures, muscle spasm', category:'Mental Health & Psychiatry' },
+  { generic:'Diazepam', brands:['Valium','Anxicalm','Diazemuls'], indication:'Benzodiazepine — anxiety, seizures, muscle spasm', category:'Mental Health & Psychiatry' },
   { generic:'Lorazepam', brands:['Ativan'], indication:'Benzodiazepine — anxiety, seizures', category:'Mental Health & Psychiatry' },
   { generic:'Alprazolam', brands:['Xanax'], indication:'Benzodiazepine — anxiety', category:'Mental Health & Psychiatry' },
-  { generic:'Zopiclone', brands:['Zimovane'], indication:'Hypnotic — insomnia', category:'Mental Health & Psychiatry' },
-  { generic:'Zolpidem', brands:['Stilnoct'], indication:'Hypnotic — insomnia', category:'Mental Health & Psychiatry' },
+  { generic:'Zopiclone', brands:['Zimovane','Zileze','Zimoclone','Zopitan','Zorclone'], indication:'Hypnotic — insomnia', category:'Mental Health & Psychiatry' },
+  { generic:'Zolpidem', brands:['Stilnoct','Nytamel','Zolnod','Edluar'], indication:'Hypnotic — insomnia', category:'Mental Health & Psychiatry' },
 
   // ── NEUROLOGICAL ────────────────────────────────────────────────────────────
   { generic:'Levetiracetam', brands:['Keppra'], indication:'Antiepileptic — seizures', category:'Neurological' },
@@ -165,8 +166,8 @@ const MEDREF = [
   // ── GASTROINTESTINAL ────────────────────────────────────────────────────────
   { generic:'Omeprazole', brands:['Losec'], indication:'PPI — reflux, ulcers', category:'Gastrointestinal' },
   { generic:'Esomeprazole', brands:['Nexium'], indication:'PPI — reflux, ulcers', category:'Gastrointestinal' },
-  { generic:'Lansoprazole', brands:['Zoton'], indication:'PPI — reflux, ulcers', category:'Gastrointestinal' },
-  { generic:'Pantoprazole', brands:['Protium'], indication:'PPI — reflux, ulcers', category:'Gastrointestinal' },
+  { generic:'Lansoprazole', brands:['Zoton','Lanzol','Razolager','Zomel'], indication:'PPI — reflux, ulcers', category:'Gastrointestinal' },
+  { generic:'Pantoprazole', brands:['Protium','Somac','Pantoloc','Pantium','Pantup'], indication:'PPI — reflux, ulcers', category:'Gastrointestinal' },
   { generic:'Ranitidine', brands:['Zantac'], indication:'H2 antagonist — reflux, ulcers', category:'Gastrointestinal' },
   { generic:'Famotidine', brands:['Pepcid'], indication:'H2 antagonist — reflux', category:'Gastrointestinal' },
   { generic:'Metoclopramide', brands:['Maxolon'], indication:'Antiemetic — nausea, vomiting', category:'Gastrointestinal' },
@@ -197,7 +198,7 @@ const MEDREF = [
   { generic:'Aciclovir', brands:['Zovirax'], indication:'Antiviral — herpes, shingles', category:'Antibiotics & Antimicrobials' },
 
   // ── MUSCULOSKELETAL ─────────────────────────────────────────────────────────
-  { generic:'Allopurinol', brands:['Zyloric'], indication:'Gout prevention', category:'Musculoskeletal' },
+  { generic:'Allopurinol', brands:['Zyloric','Alopur','Tipuric'], indication:'Gout prevention', category:'Musculoskeletal' },
   { generic:'Colchicine', brands:['Colchicine'], indication:'Acute gout', category:'Musculoskeletal' },
   { generic:'Methotrexate', brands:['Metoject'], indication:'Rheumatoid arthritis, immunosuppression', category:'Musculoskeletal' },
   { generic:'Alendronic Acid', brands:['Fosamax'], indication:'Bisphosphonate — osteoporosis', category:'Musculoskeletal' },
