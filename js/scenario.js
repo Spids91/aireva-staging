@@ -103,8 +103,15 @@ function generateScenario(presId) {
   const rr  = Array.isArray(d.rr) ? _ri(d.rr[0], d.rr[1])
             : d.rr ? applyRelative(band.rr, d.rr, age)
             : _ri(band.rr[0], band.rr[1]);
-  const sys = d.bpSys ? applyRelative([band.bp[0], band.bp[1]], d.bpSys, age) : _ri(band.bp[0], band.bp[1]);
-  const dia = d.bpDia ? applyRelative([band.bp[2], band.bp[3]], d.bpDia, age) : _ri(band.bp[2], band.bp[3]);
+  // BP: usually a relative deviation, but a variant may give an absolute [lo,hi] range
+  // (like rr/spo2) for precise control, e.g. a severe-shock systolic [60,85] that should
+  // never read near-normal.
+  const sys = Array.isArray(d.bpSys) ? _ri(d.bpSys[0], d.bpSys[1])
+            : d.bpSys ? applyRelative([band.bp[0], band.bp[1]], d.bpSys, age)
+            : _ri(band.bp[0], band.bp[1]);
+  const dia = Array.isArray(d.bpDia) ? _ri(d.bpDia[0], d.bpDia[1])
+            : d.bpDia ? applyRelative([band.bp[2], band.bp[3]], d.bpDia, age)
+            : _ri(band.bp[2], band.bp[3]);
   // SpO2: most presentations use a flat absolute range [min,max]. A presentation
   // can instead provide `spo2Severe:[low,high]` and tag each variant with a
   // `severity` (0-1); then SpO2 is biased toward the LOW end for high-severity
