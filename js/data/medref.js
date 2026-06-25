@@ -210,7 +210,9 @@ const MEDREF = [
   { generic:'Rosuvastatin', brands:['Crestor'], indication:'Statin — cholesterol lowering', category:'Cardiovascular' },
   { generic:'Simvastatin', brands:['Zocor'], indication:'Statin — cholesterol lowering', category:'Cardiovascular' },
   { generic:'Pravastatin', brands:['Lipostat'], indication:'Statin — cholesterol lowering', category:'Cardiovascular' },
-  { generic:'Ezetimibe', brands:['Ezetrol'], indication:'Cholesterol absorption inhibitor', category:'Cardiovascular' }
+  { generic:'Ezetimibe', brands:['Ezetrol'], indication:'Cholesterol absorption inhibitor', category:'Cardiovascular' },
+  { generic:'Folic Acid', brands:['Clonfolic'], indication:'Vitamin supplement — pregnancy, anaemia prevention', category:'Supplements & Vitamins' },
+  { generic:'Ferrous Fumarate', brands:['Galfer'], indication:'Iron supplement — iron-deficiency anaemia', category:'Supplements & Vitamins' }
 
 ];
 
@@ -227,5 +229,6 @@ const MEDREF_CATEGORIES = [
   { name:'Pain Management',                icon:'\uD83D\uDC8A' },
   { name:'Gastrointestinal',               icon:'\uD83E\uDEC3' },
   { name:'Antibiotics & Antimicrobials',   icon:'\uD83E\uDDA0' },
-  { name:'Musculoskeletal',                icon:'\uD83E\uDDB4' }
+  { name:'Musculoskeletal',                icon:'\uD83E\uDDB4' },
+  { name:'Supplements & Vitamins',         icon:'\uD83C\uDF4A' }
 ];
