@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.6 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.7 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -96,6 +96,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.7</h2>
+      <p>New optional scenario timer: switch it on from the scenario screen and set anything from 5 to 15 minutes to practise under exam-style pressure. It counts down at the top of the station, turns amber in the final minute as a gentle nudge, and flags time is up without cutting you off, so you can still finish at your own pace. The scenario intro screen has been tidied up, with a clearer "skip this intro next time" option. Readability improvements: the Advanced Paramedic amber and a few other accent colours have been deepened so text is easier to read, especially in bright light. Under the hood, the app now carries its own fonts so it looks right with no connection at all, and a round of security hardening was added. Smaller polish throughout.</p>
       <h2>v0.9.6</h2>
       <p>Six new presentations: Cardiac Arrest (Basic Life Support, VF/pVT and PEA, with a true arrest picture on the monitor rather than ordinary vitals), External Haemorrhage, Sepsis, Asthma, Environmental Emergencies (hypothermia, heat illness and drowning, where the patient's temperature now tells the story), and Obstetric Emergencies (imminent birth, eclampsia, post-partum haemorrhage, shoulder dystocia, cord prolapse and breech). New Prestige system: once you reach Master Clinician you can prestige to climb again and earn a permanent star, with new achievements to chase, and your mastery, badges and streak all stay exactly as they are. The scenario generator now opens with a clear choice of Adult, Paediatric or Mega OSCE, with paediatric and combined scenarios coming soon. Advanced Paramedic steps in scenarios are now shown but clearly dimmed, so it is obvious what sits above Paramedic scope. The whole scenario library is now adult-focused, with paediatrics being built separately. Many realism, scope and wording fixes throughout.</p>
       <h2>v0.9.5</h2>
