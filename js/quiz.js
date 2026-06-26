@@ -1,4 +1,4 @@
-// ─── QUIZ.JS v0.9.7 ───────────────────────────────────────────────────────────
+// ─── QUIZ.JS v0.9.8 ───────────────────────────────────────────────────────────
 // The entire quiz engine. Modes: daily challenge, standard, adaptive, weak spots,
 // timed, category, spaced repetition, plus the intro quiz. Two answer formats:
 // multiple-choice (auto-marked) and flashcard (self-marked).

@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.7 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.8 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -96,6 +96,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.8</h2>
+      <p>Nine new adult presentations, taking the scenario library to twenty-five. New trauma stations: Head Injury (graded by conscious level, with the blood-pressure targets that protect the injured brain), Crush Injury (with the pre-release fluid teaching), Harness Suspension Trauma, and Limb Injury (fractures, dislocations and soft-tissue injuries, with a focus on checking circulation, sensation and movement before and after splinting). New medical stations: Acute Pulmonary Oedema (with the full CPAP criteria you need to know), Adrenal Insufficiency, Sickle Cell Crisis, Epistaxis, and a combined Behavioural and Mental Health Emergency covering capacity, de-escalation and scene safety. Decompression Illness has been added to the Environmental scenarios for divers. Two brand-new categories, Haematological and Behavioural, now feature in the library. More scenarios now model whether the emergency was witnessed or not, which changes the history you can gather and where you are likely to find the patient, so seizures, cardiac arrests and several others feel more true to life. Plus a round of realism fixes to scene descriptions and patient ages.</p>
       <h2>v0.9.7</h2>
       <p>New optional scenario timer: switch it on from the scenario screen and set anything from 5 to 15 minutes to practise under exam-style pressure. It counts down at the top of the station, turns amber in the final minute as a gentle nudge, and flags time is up without cutting you off, so you can still finish at your own pace. The scenario intro screen has been tidied up, with a clearer "skip this intro next time" option. Readability improvements: the Advanced Paramedic amber and a few other accent colours have been deepened so text is easier to read, especially in bright light. Under the hood, the app now carries its own fonts so it looks right with no connection at all, and a round of security hardening was added. Smaller polish throughout.</p>
       <h2>v0.9.6</h2>
