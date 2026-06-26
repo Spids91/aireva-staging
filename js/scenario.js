@@ -723,10 +723,9 @@ function scenarioChoiceHTML() {
         <span class="scen-cohort-ico">🧒</span>
         <span class="scen-cohort-txt"><span class="scen-cohort-name">Paediatric Scenario</span><span class="scen-cohort-sub">Generate a paediatric OSCE station</span></span>
       </button>
-      <button class="scen-cohort-btn scen-cohort-mega scen-cohort-soon" id="scenMegaBtn" disabled>
+      <button class="scen-cohort-btn scen-cohort-mega" id="scenMegaBtn">
         <span class="scen-cohort-ico">🏔️</span>
-        <span class="scen-cohort-txt"><span class="scen-cohort-name">Mega OSCE</span><span class="scen-cohort-sub">Two or more presentations combined into one station</span></span>
-        <span class="scen-cohort-soon-badge">Coming soon</span>
+        <span class="scen-cohort-txt"><span class="scen-cohort-name">Mega OSCE</span><span class="scen-cohort-sub">One patient, two concurrent presentations</span></span>
       </button>
     </div>
     ${scenarioTimerHTML()}`;
@@ -771,7 +770,7 @@ function wireScenarioTimer() {
 function wireScenarioChoice() {
   document.getElementById('scenAdultBtn')?.addEventListener('click', () => { openScenarioRunner('adult'); haptic(); });
   document.getElementById('scenPaedsBtn')?.addEventListener('click', () => { openScenarioRunner('paeds'); haptic(); });
-  document.getElementById('scenMegaBtn')?.addEventListener('click', () => { showToast('Mega OSCE, coming soon'); });
+  document.getElementById('scenMegaBtn')?.addEventListener('click', () => { openScenarioRunner('mega'); haptic(); });
   wireScenarioTimer();
 }
 
@@ -836,7 +835,7 @@ function goScenario() {
   });
   document.getElementById('scenMegaBtn')?.addEventListener('click', () => {
     if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
-    showToast('Mega OSCE, coming soon');
+    openScenarioRunner('mega'); haptic();
   });
   wireScenarioTimer();
 }
@@ -862,10 +861,10 @@ function openScenarioRunner(cohort) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back
     </div>
     ${timerBar}
-    <div class="scen-load-row">
+    ${cohort === 'mega' ? '' : `<div class="scen-load-row">
       <input type="text" id="scenSeedInput" class="scen-seed-input" placeholder="Enter a seed code (e.g. K7F2-9QX)" autocomplete="off" autocapitalize="characters" spellcheck="false">
       <button class="scen-load-btn" id="scenLoadBtn">Load</button>
-    </div>
+    </div>`}
     <div id="scenarioContent"></div>`;
   // Back returns to the cohort choice screen (goScenario), so the user can switch
   // between Adult and Paeds without leaving the feature. Stop any running timer first.
@@ -886,7 +885,266 @@ function openScenarioRunner(cohort) {
   startScenario(undefined, cohort);
 }
 
-// ── SCENARIO TIMER ──────────────────────────────────────────────────────────────
+// ── MEGA OSCE ───────────────────────────────────────────────────────────────────
+// A Mega OSCE station is ONE patient with TWO concurrent presentations, drawn from the
+// curated MEGA_CASES list (each case clinically reviewed, so two presentations never
+// combine into a contradictory patient). Unlike the normal generator, mega is NOT seeded
+// (simpler path) and builds its vitals from the case's authored absolute ranges rather
+// than from relative deviations. Age determines the pool: <=15 draws the paed cases, >15
+// the adult cases.
+function _megaRollVitals(vset) {
+  // vset is a set of absolute ranges, e.g. { hr:[114,120], rr:[26,30], spo2:[91,93],
+  // sys:[104,112], dia:[60,68], temp:[38.7,39.1], bgl:[7.0,8.0] }. Roll within each.
+  return {
+    hr:   _ri(vset.hr[0],   vset.hr[1]),
+    rr:   _ri(vset.rr[0],   vset.rr[1]),
+    spo2: _ri(vset.spo2[0], vset.spo2[1]),
+    sys:  _ri(vset.sys[0],  vset.sys[1]),
+    dia:  _ri(vset.dia[0],  vset.dia[1]),
+    temp: _rf(vset.temp[0], vset.temp[1]),
+    bgl:  _rf(vset.bgl[0],  vset.bgl[1]),
+  };
+}
+function generateMegaScenario(cohort) {
+  // Pick the pool by cohort. 'mega' with no further info picks any; but the cohort screen
+  // passes 'mega' and we choose adult vs paed by a coin-weighted pool here (age then set
+  // from the chosen case's range). To keep it simple and match "age determines pool", we
+  // first pick a case from the combined list, then derive age within ITS range.
+  const pool = (Array.isArray(window.MEGA_CASES) ? window.MEGA_CASES : []);
+  if (!pool.length) return null;
+  const c = _pick(pool);
+  const age = _ri(c.age[0], c.age[1]);
+  const sex = c.sex && c.sex !== 'any' ? c.sex : (_rand() < 0.5 ? 'male' : 'female');
+  const band = scenVitalBand(age);
+
+  // Location: pinned pool if the case specifies one, else the normal random location.
+  let location;
+  if (Array.isArray(c.locationPool) && c.locationPool.length) {
+    location = _pick(c.locationPool);
+  } else {
+    location = _pick(SCEN_LOCATIONS).name;
+  }
+
+  // Dispatch: authored override if present (with {location} substituted), else a generic.
+  const ageLabel = age <= 15 ? `${age}-year-old` : `${age}-year-old`;
+  const personWord = age <= 15 ? (sex === 'male' ? 'boy' : 'girl') : (sex === 'male' ? 'man' : 'woman');
+  let dispatch;
+  if (c.dispatch) {
+    dispatch = c.dispatch.replace('{location}', location);
+  } else {
+    dispatch = `You are called to ${location} for a ${ageLabel} ${personWord}.`;
+  }
+
+  // Vitals: initial set, plus the reassess set. The reassess may be a single set or a set
+  // of outcomes (M5) from which we pick one per generation.
+  const vInit = _megaRollVitals(c.vitalsInitial);
+  let reassessSet, reassessNote;
+  if (c.vitalsReassess.outcomes) {
+    const out = _pick(c.vitalsReassess.outcomes);
+    reassessSet = _megaRollVitals(out.v);
+    reassessNote = out.note;
+  } else {
+    reassessSet = _megaRollVitals(c.vitalsReassess);
+    reassessNote = c.reassessNote || '';
+  }
+
+  // Pre-verbal wording for under-3 conscious paeds (same rule as the single-presentation engine).
+  const presentationText = (age < 3 && c.conscious && c.presentationU3) ? c.presentationU3 : c.presentation;
+
+  return {
+    mega: true,
+    caseId: c.id,
+    title: c.title,
+    age, sex, band,
+    dispatch,
+    presentationText,
+    guardian: !!c.guardian,
+    sample: c.sample,
+    opqrst: c.opqrst || null,
+    capRefill: c.capRefill || null,
+    spo2Note: c.spo2Note || null,
+    vInit, reassessSet, reassessNote,
+    reveal: c.reveal,
+    drugs: c.drugs,
+    isAdult: age > 15,
+  };
+}
+
+function renderMegaCard(sc) {
+  if (!sc) {
+    const w = document.getElementById('scenarioContent');
+    if (w) w.innerHTML = '<div class="scen-empty">Could not build a Mega station.</div>';
+    return;
+  }
+  // Reuse the shared section + dose helpers by rebuilding the small ones locally (renderMegaCard
+  // is intentionally separate from renderScenarioCard so the normal path stays untouched).
+  const escapeHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const sec = (title, rows) => `
+    <div class="scen-sec">
+      <div class="scen-sec-title">${title}</div>
+      <div class="scen-rows">
+        ${rows.map(([k, val]) => `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}</span></div>`).join('')}
+      </div>
+    </div>`;
+
+  // Vital rows builder for a given set. Adds the COPD-target note on SpO2 and the cap-refill
+  // row where the case carries them.
+  const vitalRowsFor = (v, withExtras) => {
+    const rows = [
+      ['Heart Rate', `${v.hr} bpm`],
+      ['Resp Rate', `${v.rr} /min`],
+      ['SpO₂', `${v.spo2}%${withExtras && sc.spo2Note ? ` <span class="scen-v-note">(${escapeHtml(sc.spo2Note)})</span>` : ''}`],
+      ['Blood Pressure', `${v.sys}/${v.dia} mmHg`],
+      ['BGL', `${v.bgl} mmol/L`],
+      ['Temperature', `${v.temp}°C`],
+    ];
+    if (withExtras && sc.capRefill) rows.push(['Capillary Refill', sc.capRefill]);
+    return rows;
+  };
+
+  // The Vital Signs section is custom for mega: the INITIAL set, then a "Reassess (5 min)"
+  // tap-to-reveal that STACKS the repeat set beneath (so the student can compare to baseline),
+  // available BEFORE the diagnosis reveal (an active reassessment decision during the station).
+  const initRows = vitalRowsFor(sc.vInit, true);
+  const reRows = vitalRowsFor(sc.reassessSet, false);
+  // Flag changed values so the deterioration/response is visible at a glance.
+  const changedReRows = reRows.map(([k, val]) => {
+    const initRow = initRows.find(r => r[0] === k);
+    const changed = initRow && initRow[1] !== val;
+    return [k, `${val}${changed ? ' <span class="scen-vital-changed">●</span>' : ''}`];
+  });
+  const vitalSignsSection = `
+    <div class="scen-sec scen-vitals-mega">
+      <div class="scen-sec-title">Vital Signs</div>
+      <div class="scen-rows">
+        ${initRows.map(([k, val]) => `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}</span></div>`).join('')}
+      </div>
+      <button class="scen-reassess-btn" id="scenReassessBtn">Reassess — 5 minutes later</button>
+      <div class="scen-reassess" id="scenReassess" style="display:none">
+        <div class="scen-reassess-label">Reassessment (5 minutes later)</div>
+        <div class="scen-rows">
+          ${changedReRows.map(([k, val]) => `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}</span></div>`).join('')}
+        </div>
+        ${sc.reassessNote ? `<div class="scen-reassess-note">${escapeHtml(sc.reassessNote)}</div>` : ''}
+      </div>
+    </div>`;
+
+  // SAMPLE rows.
+  const s = sc.sample;
+  const sampleRows = [
+    ['Signs/Symptoms', s.symptoms],
+    ['Allergies', s.allergies],
+    ['Medications', s.medications],
+    ['Past History', s.pmh],
+    ['Last Intake', s.lastMeal],
+    ['Events', s.events],
+  ];
+  const opqrstRows = sc.opqrst ? [
+    ['Onset', sc.opqrst.onset],
+    ['Provocation', sc.opqrst.provocation],
+    ['Quality', sc.opqrst.quality],
+    ['Radiation', sc.opqrst.radiation],
+    ['Severity', sc.opqrst.severity],
+    ['Time', sc.opqrst.time],
+  ] : [];
+
+  // Reveal: two threads, each rendered with the shared block renderer. apPillify the bodies
+  // so AP-scope steps get the amber pill, consistent with the rest of the app.
+  const threadHtml = sc.reveal.threads.map(t => {
+    const inner = t.blocks.map(b => {
+      if (b.type === 'lead') return `<div class="rv-lead">${apPillify(b.body)}</div>`;
+      if (b.type === 'branch') return `<div class="rv-block rv-branch"><div class="rv-tag">${escapeHtml(b.label)}</div><div class="rv-body">${apPillify(b.body)}</div></div>`;
+      if (b.type === 'note') return `<div class="rv-block rv-note">${b.label ? `<div class="rv-tag">${escapeHtml(b.label)}</div>` : ''}<div class="rv-body">${apPillify(b.body)}</div></div>`;
+      return `<div class="rv-block rv-step"><div class="rv-body">${apPillify(b.body)}</div></div>`;
+    }).join('');
+    return `<div class="scen-mega-thread"><div class="scen-mega-thread-title">${escapeHtml(t.title)}</div>${inner}</div>`;
+  }).join('');
+
+  // Drugs: reuse the same dose rendering as the normal card. Patients >15 use adult fields,
+  // <=15 use paed fields, matching the Adult/Paed CPG split.
+  const isAdult = sc.isAdult;
+  function renderDoseValue(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return escapeHtml(v);
+    const lead = v.lead ? `<span class="scen-dose-lead">${escapeHtml(v.lead)}</span>` : '';
+    const renderGroup = (route, bands) => {
+      const routeLbl = route ? `<span class="scen-dose-route">${escapeHtml(route)}</span>` : '';
+      const bubbles = (bands || []).map(b => {
+        const age = b[0] ? `<span class="scen-dose-age">${escapeHtml(b[0])}</span>` : '';
+        return `<span class="scen-dose-band">${age}<span class="scen-dose-amt">${escapeHtml(b[1])}</span></span>`;
+      }).join('');
+      return `${routeLbl}<span class="scen-dose-bands">${bubbles}</span>`;
+    };
+    let body;
+    if (Array.isArray(v.groups)) body = v.groups.map(g => `<div class="scen-dose-group">${renderGroup(g.route, g.bands)}</div>`).join('');
+    else body = renderGroup(v.route, v.bands);
+    const note = v.note ? `<span class="scen-dose-note">${escapeHtml(v.note)}</span>` : '';
+    return `${lead}<div class="scen-dose-wrap">${body}${note}</div>`;
+  }
+  const drugLines = sc.drugs.map(dr => {
+    // Resolve the scope object: adult vs paed split, then paramedic/ap fields.
+    const scope = isAdult
+      ? { paramedic: dr.paramedic, ap: dr.ap }
+      : (dr.paed || { paramedic: dr.paramedic, ap: dr.ap });
+    const pm = scope.paramedic, ap = scope.ap;
+    const pmHtml = pm != null ? `<div class="scen-dose-wrap">${renderDoseValue(pm)}</div>` : '';
+    const apHtml = ap != null
+      ? `<span class="scen-ap-pill">AP only:</span><div class="scen-dose-wrap scen-dose-ap">${renderDoseValue(ap)}</div>`
+      : '';
+    return `<li><strong>${escapeHtml(dr.name)}</strong> ${pmHtml}${apHtml}</li>`;
+  }).join('');
+
+  const guardianLine = sc.guardian ? `<div class="scen-guardian-tag">A parent/guardian is present.</div>` : '';
+
+  const html = `
+    <div class="scen-card scen-card-mega">
+      <div class="scen-head">
+        <div class="scen-badge scen-badge-mega">Mega OSCE</div>
+        <div class="scen-title">Emergency Call</div>
+      </div>
+      <div class="scen-sec"><div class="scen-sec-title">Dispatch</div><div class="scen-dispatch">${escapeHtml(sc.dispatch)}</div></div>
+      ${sec('Patient', [['Age', `${sc.age} years`], ['Sex', sc.sex === 'male' ? 'Male' : 'Female']])}
+      <div class="scen-sec"><div class="scen-sec-title">On Arrival</div><div class="scen-dispatch">${escapeHtml(sc.presentationText)}${guardianLine}</div></div>
+      ${vitalSignsSection}
+      ${sec('SAMPLE History', sampleRows)}
+      ${opqrstRows.length ? sec('OPQRST', opqrstRows) : ''}
+      <button class="scen-reveal-btn" id="scenRevealBtn">Reveal Diagnosis &amp; Management</button>
+      <div class="scen-reveal" id="scenReveal" style="display:none">
+        <div class="scen-sec"><div class="scen-sec-title">Two concurrent problems</div><div class="scen-mega-threads">${threadHtml}</div></div>
+        <div class="scen-sec"><div class="scen-sec-title">Drugs &amp; Doses</div><ul class="scen-drugs">${drugLines}</ul></div>
+        <div class="scen-sec scen-teaching"><div class="scen-sec-title">Teaching Point</div><div class="scen-dispatch">${escapeHtml(sc.reveal.teaching)}</div></div>
+        <div class="scen-disclaimer">For study practice only, not a clinical reference. Generated vital signs are for practice and may not be physiologically exact. Always follow current clinical practice guidelines.</div>
+      </div>
+      <button class="scen-new-btn" id="scenNewBtn">Generate New Scenario</button>
+    </div>`;
+
+  const wrap = document.getElementById('scenarioContent');
+  if (!wrap) return;
+  wrap.innerHTML = html;
+
+  // Reassess tap-to-reveal (inside the Vital Signs bubble, before the diagnosis reveal).
+  const reBtn = document.getElementById('scenReassessBtn'), reBox = document.getElementById('scenReassess');
+  if (reBtn && reBox) reBtn.addEventListener('click', () => {
+    const open = reBox.style.display !== 'none';
+    reBox.style.display = open ? 'none' : 'block';
+    reBtn.textContent = open ? 'Reassess — 5 minutes later' : 'Hide reassessment';
+    if (!open) requestAnimationFrame(() => reBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+    haptic();
+  });
+
+  // Diagnosis reveal (mirrors the normal card).
+  const rb = document.getElementById('scenRevealBtn'), rv = document.getElementById('scenReveal');
+  if (rb && rv) rb.addEventListener('click', () => {
+    const open = rv.style.display !== 'none';
+    rv.style.display = open ? 'none' : 'block';
+    rb.textContent = open ? 'Reveal Diagnosis & Management' : 'Hide Diagnosis & Management';
+    if (!open) requestAnimationFrame(() => rv.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    haptic();
+  });
+
+  document.getElementById('scenNewBtn')?.addEventListener('click', () => { startScenario(undefined, 'mega'); haptic(); });
+}
+
 // Optional OSCE countdown. Off by default. Crucially it does NOT auto-start: in a real
 // classroom OSCE the examiner generates the station, briefs the room and sets up the
 // equipment BEFORE the candidates begin, so the clock must wait for a deliberate Start.
@@ -1013,14 +1271,22 @@ function startScenario(presId, cohort, seedCode) {
     const cyc = setInterval(() => { mi = (mi + 1) % msgs.length; if (textEl) textEl.textContent = msgs[mi]; }, 280);
     setTimeout(() => {
       clearInterval(cyc);
-      const sc = generateScenario(presId, seedCode, _scenCohort);
-      renderScenarioCard(sc);
+      if (_scenCohort === 'mega') {
+        renderMegaCard(generateMegaScenario('mega'));
+      } else {
+        const sc = generateScenario(presId, seedCode, _scenCohort);
+        renderScenarioCard(sc);
+      }
       armScenTimer();            // ready/paused at full time, waits for examiner to tap Start
       wireScenTimerControls();
     }, 900);
   } else {
-    const sc = generateScenario(presId, seedCode, _scenCohort);
-    renderScenarioCard(sc);
+    if (_scenCohort === 'mega') {
+      renderMegaCard(generateMegaScenario('mega'));
+    } else {
+      const sc = generateScenario(presId, seedCode, _scenCohort);
+      renderScenarioCard(sc);
+    }
     armScenTimer();
     wireScenTimerControls();
   }

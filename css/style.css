@@ -1585,6 +1585,31 @@ ul { list-style: none; }
 .scen-reveal { display:flex; flex-direction:column; gap:14px; scroll-margin-top: calc(var(--sbh, env(safe-area-inset-top, 0px)) + var(--hdr-h) + 12px); }
 .scen-reveal .scen-sec { border-color:var(--primary); border-width:1.5px; }
 .scen-reveal .scen-sec-title { color:var(--primary-fg); }
+
+/* ── MEGA OSCE ──────────────────────────────────────────────────────────────── */
+.scen-badge-mega { background:#7C3AED; }
+.scen-v-note { font-size:11px; font-weight:500; color:var(--text2); }
+/* The reassess control sits inside the Vital Signs bubble: a quieter secondary button
+   than the main amber reveal, so it reads as an in-section action, not the big reveal. */
+.scen-reassess-btn {
+  width:100%; margin-top:12px; padding:11px; border-radius:var(--r8);
+  font-size:13.5px; font-weight:600; cursor:pointer;
+  background:var(--surf2); color:var(--text); border:1px solid var(--border);
+  transition:transform .15s; }
+.scen-reassess-btn:active { transform:scale(.98); }
+.scen-reassess { margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); }
+.scen-reassess-label { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--warning); margin-bottom:8px; }
+.scen-reassess-note { font-size:13px; color:var(--text2); line-height:1.5; font-style:italic; margin-top:10px; }
+/* A small dot flags a vital that changed from the initial set, so the deterioration or
+   response is visible at a glance without colour being the only signal. */
+.scen-vital-changed { color:var(--warning); font-size:10px; vertical-align:middle; margin-left:4px; }
+/* The two concurrent-problem threads in the reveal. */
+.scen-mega-threads { display:flex; flex-direction:column; gap:14px; }
+.scen-mega-thread { background:var(--surf2); border-radius:var(--r8); padding:11px 13px; }
+.scen-mega-thread-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; }
+.scen-teaching .scen-dispatch { font-style:italic; }
+.scen-guardian-tag { font-size:13px; color:var(--text2); margin-top:8px; font-style:italic; }
 .scen-drugs { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
 .scen-drugs li { font-size:14px; color:var(--text2); line-height:1.5; }
 .scen-disclaimer { font-size:12px; color:var(--text2); line-height:1.5; font-style:italic;

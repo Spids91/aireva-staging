@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.13 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.14 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -119,6 +119,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.14</h2>
+      <p>Mega OSCE is here. The third scenario mode puts a single patient in front of you with two things going on at once: the septic asthmatic, the stroke that is really a hypo, the road traffic collision caused by a low blood sugar, and more. Twelve curated cases across adult, paediatric and trauma, each built around a real combination you could meet on the road. Every Mega station carries two sets of observations: an initial set and a reassessment five minutes later, revealed when you tap to reassess, so you can see the patient evolving and practise catching the deterioration. The reveal walks both problems side by side with the management for each. Find it on the third button on the scenario screen.</p>
       <h2>v0.9.12</h2>
       <p>Small fixes to the paediatric Symptomatic Bradycardia scenario: the pathway now includes applying ECG and SpO2 monitoring, and the wording around chest compressions has been clarified.</p>
       <h2>v0.9.11</h2>
