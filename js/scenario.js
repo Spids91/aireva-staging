@@ -257,6 +257,16 @@ function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
   let locPool = SCEN_LOCATIONS;
   if (variant.witness === 'unwitnessed')      locPool = SCEN_LOCATIONS.filter(l => l.solo);
   else if (variant.witness === 'witnessed')   locPool = SCEN_LOCATIONS.filter(l => !l.solo || l.found);
+  // PAEDIATRIC HARD FILTER: a child (age <= 12) is never dispatched to an adult-only
+  // place (building site, pub, mart, lone bog/layby, nursing home, etc.). noPaed is a
+  // hard exclude, unlike the soft ageSkew weighting applied later. Applied after the
+  // witness filter so it composes with it; if it empties the pool, fall back to all
+  // non-noPaed locations so we never crash or leak an implausible spot.
+  const isPaed = age <= 12;
+  if (isPaed) {
+    locPool = locPool.filter(l => !l.noPaed);
+    if (!locPool.length) locPool = SCEN_LOCATIONS.filter(l => !l.noPaed);
+  }
   if (!locPool.length) locPool = SCEN_LOCATIONS;
   // Location selection. Two SOFT weightings compose here, both layered on top of the witness
   // filter (which already decided the eligible pool): (a) setting-bias, weighting locations
@@ -305,6 +315,19 @@ function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
   // "collapsed / became unresponsive there", never "found".
   const conscious = variant.conscious !== false;  // default conscious unless flagged false
 
+  // PAEDIATRIC GUARDIAN DEFAULT: a child is almost always with a parent/guardian or
+  // friends, so the "found alone, no history" framing that suits a lone adult collapse
+  // is usually wrong for a child. For paeds (age <= 12) a guardian is present ~88% of
+  // the time; the lone case stays possible (~12%) but rare, and skews to older children.
+  // The flag is drawn from the seeded RNG so it stays reproducible by seed code. A
+  // variant that explicitly sets witness:'unwitnessed' keeps its authored intent
+  // (some scenarios are deliberately found-alone), so we only auto-bend when the variant
+  // hasn't pinned a witness state.
+  const _paedAloneChance = age <= 5 ? 0.05 : 0.15;   // youngest almost never alone
+  const paedGuardian = isPaed && variant.witness == null
+    ? (_rand() >= _paedAloneChance)   // true = guardian present
+    : null;                            // null = not a paed auto-bend (use existing logic)
+
   // Under-3 conscious patients are pre-verbal: if the variant carries an
   // age-appropriate presentationU3 string, use it instead of the verbal-assessment
   // wording (which describes "talking / following commands" — wrong for a toddler).
@@ -322,9 +345,20 @@ function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
   } else {
     events = variant.events;
     if (!conscious) {
-      const frame = location.found
-        ? 'Found unresponsive by a bystander.'
-        : `Collapsed and became unresponsive at ${location.name}.`;
+      // Paed with a guardian present: framed as witnessed by the parent, not "found".
+      // Paed alone (rare) or any adult: original found/collapsed framing.
+      let frame;
+      if (paedGuardian === true) {
+        frame = 'Became unresponsive with a parent present, who is able to give a brief history.';
+      } else if (paedGuardian === false) {
+        frame = location.found
+          ? 'Found unresponsive, with no adult who saw what happened.'
+          : `Became unresponsive at ${location.name}, briefly unattended.`;
+      } else {
+        frame = location.found
+          ? 'Found unresponsive by a bystander.'
+          : `Collapsed and became unresponsive at ${location.name}.`;
+      }
       events = `${frame} ${variant.events}`;
     }
   }
@@ -343,7 +377,9 @@ function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
   // derived from that single source (onsetWhen) so it can't drift from OPQRST Time.
   // Unwitnessed → genuinely unknown (clinically important: often excludes the window).
   let lastIntake;
-  if (!conscious) {
+  if (!conscious && paedGuardian === true) {
+    lastIntake = 'A parent is present and can give a brief account of the lead-up.';
+  } else if (!conscious) {
     lastIntake = 'Unknown, patient unresponsive, no reliable history.';
   } else if (variant.witness === 'unwitnessed') {
     lastIntake = 'Unknown, the patient was found alone and the time of onset is unwitnessed.';
