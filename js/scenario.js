@@ -570,7 +570,14 @@ function openScenarioRunner(cohort) {
   const wrap = document.getElementById('quizTabContent');
   if (!wrap) return;
   const timerBar = G.scenTimerOn
-    ? `<div class="scen-timer-bar" id="scenTimerBar"><span class="scen-timer-clock" id="scenTimerClock">⏱ ${_fmtTime((G.scenTimerMins||10)*60)}</span></div>`
+    ? `<div class="scen-timer-bar" id="scenTimerBar">
+         <span class="scen-timer-clock" id="scenTimerClock">⏱ ${_fmtTime((G.scenTimerMins||10)*60)}</span>
+         <div class="scen-timer-ctrls">
+           <button class="scen-timer-btn start" id="scenTimerStart">Start</button>
+           <button class="scen-timer-btn pause" id="scenTimerPause" style="display:none">Pause</button>
+           <button class="scen-timer-btn reset" id="scenTimerReset" disabled>Reset</button>
+         </div>
+       </div>`
     : '';
   wrap.innerHTML = `
     <div class="quiz-back-sticky" id="scenRunnerBack">
@@ -585,38 +592,108 @@ function openScenarioRunner(cohort) {
 }
 
 // ── SCENARIO TIMER ──────────────────────────────────────────────────────────────
-// Optional OSCE countdown. Off by default. Ticks down from the chosen minutes; at zero
-// it flags "time's up" with a soft haptic but does NOT lock anything (practice, not
-// punishment). Goes amber in the final minute as a gentle wrap-up nudge.
-let _scenTimerId = null;
+// Optional OSCE countdown. Off by default. Crucially it does NOT auto-start: in a real
+// classroom OSCE the examiner generates the station, briefs the room and sets up the
+// equipment BEFORE the candidates begin, so the clock must wait for a deliberate Start.
+// Controls: Start, Pause/Resume, Reset. At zero it flags "time's up" with a soft haptic
+// but does NOT lock anything (practice, not punishment). Amber in the final minute.
+let _scenTimerId = null;       // interval handle while running
+let _scenTimerRemaining = 0;   // seconds left (persists across pause)
+let _scenTimerRunning = false; // true only while actively ticking
 function _fmtTime(s) {
   const m = Math.floor(s / 60), sec = s % 60;
   return m + ':' + String(sec).padStart(2, '0');
 }
-function startScenTimer() {
-  stopScenTimer();
+// Put the timer into its READY state (full time, paused, Start enabled). Called whenever a
+// scenario card renders. Does NOT begin the countdown.
+function armScenTimer() {
+  stopScenTimerTick();
   if (!G.scenTimerOn) return;
-  let remaining = (G.scenTimerMins || 10) * 60;
+  _scenTimerRemaining = (G.scenTimerMins || 10) * 60;
+  _scenTimerRunning = false;
   const clock = document.getElementById('scenTimerClock');
   const bar = document.getElementById('scenTimerBar');
-  if (!clock || !bar) return;
-  clock.textContent = '⏱ ' + _fmtTime(remaining);
-  _scenTimerId = setInterval(() => {
-    remaining -= 1;
-    if (remaining <= 60 && remaining > 0) bar.classList.add('warn');   // amber wrap-up nudge
-    if (remaining <= 0) {
-      clock.textContent = "⏱ Time's up";
-      bar.classList.remove('warn');
-      bar.classList.add('done');
-      haptic('error');   // noticeable (not punitive) buzz to flag time's up
-      stopScenTimer();
-      return;
-    }
-    clock.textContent = '⏱ ' + _fmtTime(remaining);
-  }, 1000);
+  if (bar) bar.classList.remove('warn', 'done', 'running');
+  if (clock) clock.textContent = '⏱ ' + _fmtTime(_scenTimerRemaining);
+  _setTimerButtons('ready');
 }
-function stopScenTimer() {
+// Toggle the visible/enabled state of the three control buttons for a given mode.
+function _setTimerButtons(mode) {
+  const start = document.getElementById('scenTimerStart');
+  const pause = document.getElementById('scenTimerPause');
+  const reset = document.getElementById('scenTimerReset');
+  if (!start || !pause || !reset) return;
+  if (mode === 'ready') {            // full time, not started
+    start.style.display = ''; start.textContent = 'Start'; start.disabled = false;
+    pause.style.display = 'none';
+    reset.disabled = true;
+  } else if (mode === 'running') {   // ticking
+    start.style.display = 'none';
+    pause.style.display = ''; pause.textContent = 'Pause';
+    reset.disabled = false;
+  } else if (mode === 'paused') {    // frozen mid-count
+    start.style.display = ''; start.textContent = 'Resume'; start.disabled = false;
+    pause.style.display = 'none';
+    reset.disabled = false;
+  } else if (mode === 'done') {      // hit zero
+    start.style.display = 'none';
+    pause.style.display = 'none';
+    reset.disabled = false;
+  }
+}
+// Start (from ready) or resume (from paused). Begins ticking from whatever remains.
+function startOrResumeScenTimer() {
+  if (!G.scenTimerOn || _scenTimerRunning) return;
+  if (_scenTimerRemaining <= 0) return;
+  _scenTimerRunning = true;
+  _setTimerButtons('running');
+  const bar = document.getElementById('scenTimerBar');
+  if (bar) bar.classList.add('running');
+  _scenTimerId = setInterval(_scenTimerTick, 1000);
+}
+function _scenTimerTick() {
+  const clock = document.getElementById('scenTimerClock');
+  const bar = document.getElementById('scenTimerBar');
+  if (!clock || !bar) { stopScenTimerTick(); return; }
+  _scenTimerRemaining -= 1;
+  if (_scenTimerRemaining <= 60 && _scenTimerRemaining > 0) bar.classList.add('warn');
+  if (_scenTimerRemaining <= 0) {
+    clock.textContent = "⏱ Time's up";
+    bar.classList.remove('warn', 'running');
+    bar.classList.add('done');
+    haptic('error');               // noticeable (not punitive) buzz to flag time's up
+    stopScenTimerTick();
+    _setTimerButtons('done');
+    return;
+  }
+  clock.textContent = '⏱ ' + _fmtTime(_scenTimerRemaining);
+}
+// Pause: freeze the count, keep the remaining time, offer Resume.
+function pauseScenTimer() {
+  if (!_scenTimerRunning) return;
+  stopScenTimerTick();
+  const bar = document.getElementById('scenTimerBar');
+  if (bar) bar.classList.remove('running');
+  _setTimerButtons('paused');
+}
+// Reset: back to full time, ready to run again (for the next group, no regenerate needed).
+function resetScenTimer() {
+  armScenTimer();
+}
+// Stop just the ticking interval (used by pause, done, and teardown). Leaves state intact.
+function stopScenTimerTick() {
   if (_scenTimerId) { clearInterval(_scenTimerId); _scenTimerId = null; }
+  _scenTimerRunning = false;
+}
+// Full stop used when leaving the scenario feature (Back, tab switch, new scenario).
+function stopScenTimer() {
+  stopScenTimerTick();
+}
+// Wire the three control buttons (called once the runner markup is in the DOM).
+function wireScenTimerControls() {
+  document.getElementById('scenTimerStart')?.addEventListener('click', () => { startOrResumeScenTimer(); haptic(); });
+  document.getElementById('scenTimerPause')?.addEventListener('click', () => { pauseScenTimer(); haptic(); });
+  document.getElementById('scenTimerReset')?.addEventListener('click', () => { resetScenTimer(); haptic(); });
 }
 
 // Current cohort for the scenario runner ('adult' | 'paeds'). Stored so "Generate New
@@ -643,18 +720,13 @@ function startScenario(presId, cohort) {
       clearInterval(cyc);
       const sc = generateScenario(presId);
       renderScenarioCard(sc);
-      resetScenTimerBar();
-      startScenTimer();
+      armScenTimer();            // ready/paused at full time, waits for examiner to tap Start
+      wireScenTimerControls();
     }, 900);
   } else {
     const sc = generateScenario(presId);
     renderScenarioCard(sc);
-    resetScenTimerBar();
-    startScenTimer();
+    armScenTimer();
+    wireScenTimerControls();
   }
-}
-// Reset the timer bar's visual state (clear amber/done) so a new scenario starts fresh.
-function resetScenTimerBar() {
-  const bar = document.getElementById('scenTimerBar');
-  if (bar) { bar.classList.remove('warn', 'done'); }
 }

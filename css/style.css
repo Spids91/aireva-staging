@@ -1607,13 +1607,24 @@ ul { list-style: none; }
 .scen-timer-slider { flex:1; accent-color:var(--primary); cursor:pointer; }
 .scen-timer-val { font-size:var(--text-sm); font-weight:700; color:var(--text); min-width:48px; text-align:right; }
 /* Runner countdown bar — solid fill for clear contrast against the page background. */
-.scen-timer-bar { display:flex; align-items:center; justify-content:center; gap:8px;
-  margin:0 0 12px; padding:9px 14px; border-radius:var(--r12);
+.scen-timer-bar { display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin:0 0 12px; padding:9px 12px 9px 14px; border-radius:var(--r12);
   background:var(--primary); color:#fff; font-weight:800; font-size:var(--text-base);
   font-variant-numeric:tabular-nums; box-shadow:0 1px 6px rgba(37,99,235,.25);
   transition:background var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease); }
 .scen-timer-bar.warn { background:var(--warning); color:#fff; box-shadow:0 1px 6px rgba(217,119,6,.3); }
 .scen-timer-bar.done { background:var(--danger, #DC2626); color:#fff; box-shadow:0 1px 6px rgba(220,38,38,.3); }
+.scen-timer-clock { flex:0 0 auto; }
+.scen-timer-ctrls { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+/* Control buttons sit on the coloured bar: translucent white, high-contrast text. */
+.scen-timer-btn { font-family:var(--font); font-size:var(--text-sm); font-weight:700;
+  padding:5px 12px; border-radius:var(--r-pill); border:1px solid rgba(255,255,255,.55);
+  background:rgba(255,255,255,.18); color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:background var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease); }
+.scen-timer-btn:active { background:rgba(255,255,255,.34); }
+.scen-timer-btn.start { background:#fff; color:var(--primary); border-color:#fff; }
+.scen-timer-bar.warn .scen-timer-btn.start { color:var(--warning); }
+.scen-timer-btn:disabled { opacity:.45; cursor:default; }
 /* Coming-soon state: greyed and non-interactive, amber "coming soon" badge */
 .scen-cohort-soon { opacity:.55; cursor:default; }
 .scen-cohort-soon:active { transform:none; }
