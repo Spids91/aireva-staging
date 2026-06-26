@@ -1524,7 +1524,7 @@ ul { list-style: none; }
 .scen-reveal .scen-sec-title { color:var(--primary-fg); }
 .scen-drugs { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
 .scen-drugs li { font-size:14px; color:var(--text2); line-height:1.5; }
-.scen-disclaimer { font-size:12px; color:var(--text3); line-height:1.5; font-style:italic;
+.scen-disclaimer { font-size:12px; color:var(--text2); line-height:1.5; font-style:italic;
   padding:10px 12px; background:var(--surf2); border-radius:var(--r8); }
 
 /* AP-scope route pill inside scenario reveal drugs */
@@ -1550,16 +1550,18 @@ ul { list-style: none; }
 .scen-dose-band { display:inline-flex; align-items:baseline; gap:6px;
   padding:4px 10px; border-radius:var(--r8);
   background:var(--primary-light); border:1px solid var(--primary-mid); }
-.scen-dose-age { font-size:12px; font-weight:600; color:var(--text3); white-space:nowrap; }
+.scen-dose-age { font-size:12px; font-weight:600; color:var(--text2); white-space:nowrap; }
 .scen-dose-amt { font-size:13px; font-weight:700; color:var(--primary-fg); white-space:nowrap; }
-.scen-dose-note { font-size:12.5px; color:var(--text3); line-height:1.45; font-style:italic; }
+.scen-dose-note { font-size:12.5px; color:var(--text2); line-height:1.45; font-style:italic; }
 /* Dark mode: the dark tinted band background. The amount text colour comes from
-   --primary-fg (lightened cobalt) via the token, so no per-component override is needed. */
-[data-theme="dark"] .scen-dose-band { background:rgba(37,99,235,.14); border-color:rgba(37,99,235,.32); }
+   --primary-fg (lightened cobalt) via the token, so no per-component override is needed.
+   Fill and border are kept strong enough that the chip reads as distinct from the --surf
+   (#1E293B) panel it sits on; a faint wash disappears against that mid-slate surface. */
+[data-theme="dark"] .scen-dose-band { background:rgba(59,109,235,.30); border-color:rgba(147,197,253,.80); }
 /* AP structured doses: bubbles tinted amber to stay within the AP visual language. */
 .scen-dose-ap .scen-dose-band { background:var(--warning-light); border-color:var(--warning); }
 .scen-dose-ap .scen-dose-amt { color:var(--warning); }
-[data-theme="dark"] .scen-dose-ap .scen-dose-band { background:rgba(217,119,6,.16); border-color:rgba(217,119,6,.45); }
+[data-theme="dark"] .scen-dose-ap .scen-dose-band { background:rgba(217,119,6,.30); border-color:rgba(252,211,77,.80); }
 [data-theme="dark"] .scen-dose-ap .scen-dose-amt { color:#FCD34D; }
 
 /* ── Reveal sub-blocks (structured diagnosis/pathway/interventions) ─────────── */
