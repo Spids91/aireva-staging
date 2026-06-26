@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.9 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.10 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -96,6 +96,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.10</h2>
+      <p>Scenario doses are easier to read. Where a drug has different doses by age, each age band now sits in its own bubble inside the Drugs and Doses panel, so you can find the right band at a glance instead of reading through a run-on line. A paediatric paracetamol dosing display has been corrected, and a round of dose wording was tidied so age ranges render cleanly throughout. Dark mode is easier on the eyes too: the cobalt and green used for small text and numbers have been lightened in dark mode so they meet accessibility contrast standards, while buttons and badges keep their full colour. Light mode is unchanged.</p>
       <h2>v0.9.9</h2>
       <p>Paediatrics are here. The Paediatric Scenario button is now live, and choosing it generates stations for children from birth to fifteen, with the patient, history and vitals all scaled to age. Sixteen paediatric presentations are covered: Asthma, Stridor and Croup, Anaphylaxis, Burns, External Haemorrhage, Limb Injury, Shock from Blood Loss, Cardiac Arrest, Symptomatic Bradycardia, Seizure and Convulsion, Sickle Cell Crisis, Hypoglycaemia, Adrenal Insufficiency, Pyrexia, Sepsis, and an Abnormal Work of Breathing triage station that teaches the assessment and the branch decision. Dosing is shown in the proper paediatric weight-based and age-banded form throughout, with Advanced Paramedic steps dimmed as in the adult stations. The youngest patients are handled with care: under-threes are described the way you would actually assess a pre-verbal child, and a parent or guardian is almost always on scene to give the history, just as in real life. The croup station carries the epiglottitis warning, and the cardiac arrest station folds in post-resuscitation care. Adult and paediatric now sit cleanly side by side, with adults from sixteen up, so every age is covered with nothing falling between the two. Seed codes work in paediatric scenarios too, so you can share the exact same station with a classmate. As always, every clinical value has been checked against PHECC.</p>
       <h2>v0.9.8</h2>

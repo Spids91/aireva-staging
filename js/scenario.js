@@ -579,16 +579,58 @@ function renderScenarioCard(sc) {
   // Each drug carries age-specific dosing. Patients >15 get adult doses; <=15 get
   // paediatric doses, matching the split between the Adult and Paediatric CPGs.
   const isAdult = sc.age > 15;
+  // A route value (paramedic / ap) is EITHER a plain string (rendered inline as before)
+  // OR a structured object { lead?, route?, bands:[[range,dose],...], note? } whose age
+  // bands each render in their own bubble for readability. renderDoseValue handles both,
+  // so single-dose drugs (the majority) are completely unaffected.
+  function renderDoseValue(v) {
+    if (v == null) return '';
+    // Dose text legitimately contains '<' and '>' (e.g. "<1 yr", ">5 yrs"). Escape so
+    // they render as text rather than being eaten as stray tags.
+    const escapeHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (typeof v === 'string') return escapeHtml(v);   // legacy inline string
+    // Structured: optional lead sentence, per-band bubbles, optional trailing note.
+    // Bands may be a single set (with an optional `route` label) or several route groups
+    // via `groups:[{route,bands},...]` (e.g. a drug with both PO and IM age bands).
+    const lead = v.lead ? `<span class="scen-dose-lead">${escapeHtml(v.lead)}</span>` : '';
+    const renderGroup = (route, bands) => {
+      const routeLbl = route ? `<span class="scen-dose-route">${escapeHtml(route)}</span>` : '';
+      const bubbles = (bands || []).map(b =>
+        `<span class="scen-dose-band"><span class="scen-dose-age">${escapeHtml(b[0])}</span><span class="scen-dose-amt">${escapeHtml(b[1])}</span></span>`
+      ).join('');
+      return `${routeLbl}<span class="scen-dose-bands">${bubbles}</span>`;
+    };
+    let body;
+    if (Array.isArray(v.groups)) {
+      body = v.groups.map(g => `<div class="scen-dose-group">${renderGroup(g.route, g.bands)}</div>`).join('');
+    } else {
+      body = renderGroup(v.route, v.bands);
+    }
+    const note = v.note ? `<span class="scen-dose-note">${escapeHtml(v.note)}</span>` : '';
+    return `${lead}${body}${note}`;
+  }
   const drugLines = (p.reveal.drugs || []).map(dr => {
     const d = isAdult ? (dr.adult || dr) : (dr.paed || dr);
     // paramedic route shown as the main line; ap route (if any) as the amber pill.
     // Some drugs are AP-only (no paramedic route) — show just the name + AP pill,
     // never leak "undefined".
-    const main = d.paramedic ? ` &mdash; ${d.paramedic}` : '';
+    const paramVal = d.paramedic != null ? renderDoseValue(d.paramedic) : '';
+    const isStructuredParam = d.paramedic != null && typeof d.paramedic !== 'string';
+    // Structured paramedic dose renders as its own block (so bubbles sit on their own
+    // line); a plain string keeps the inline em-dash form it has always used.
+    const main = d.paramedic == null ? ''
+               : isStructuredParam ? `<div class="scen-dose-wrap">${paramVal}</div>`
+               : ` &mdash; ${paramVal}`;
+    const apVal = d.ap != null ? renderDoseValue(d.ap) : '';
+    const apIsStructured = d.ap != null && typeof d.ap !== 'string';
+    const apPill = d.ap == null ? ''
+                 : apIsStructured
+                   ? `<span class="scen-ap-pill">AP only:</span><div class="scen-dose-wrap scen-dose-ap">${apVal}</div>`
+                   : `<span class="scen-ap-pill">AP only: ${apVal}</span>`;
     return `
     <li>
       <strong>${dr.name}</strong>${main}
-      ${d.ap ? `<span class="scen-ap-pill">AP only: ${d.ap}</span>` : ''}
+      ${apPill}
     </li>`;
   }).join('');
 
