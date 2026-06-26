@@ -926,7 +926,10 @@ function generateMegaScenario(cohort) {
   }
 
   // Dispatch: authored override if present (with {location} substituted), else a generic.
-  const ageLabel = age <= 15 ? `${age}-year-old` : `${age}-year-old`;
+  // PATIENT and CHILD are placeholder TOKENS (caps on purpose), substituted here with the
+  // patient descriptor exactly as the single-presentation engine does, so the call-out reads
+  // "a 69-year-old woman" rather than the literal word.
+  const ageLabel = `${age}-year-old`;
   const personWord = age <= 15 ? (sex === 'male' ? 'boy' : 'girl') : (sex === 'male' ? 'man' : 'woman');
   let dispatch;
   if (c.dispatch) {
@@ -934,6 +937,11 @@ function generateMegaScenario(cohort) {
   } else {
     dispatch = `You are called to ${location} for a ${ageLabel} ${personWord}.`;
   }
+  dispatch = dispatch
+    .replace('a PATIENT', `a ${ageLabel} ${personWord}`)
+    .replace('PATIENT', `${ageLabel} ${personWord}`)
+    .replace('a CHILD', `a ${ageLabel} ${personWord}`)
+    .replace('CHILD', `${ageLabel} ${personWord}`);
 
   // Vitals: initial set, plus the reassess set. The reassess may be a single set or a set
   // of outcomes (M5) from which we pick one per generation.
