@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.8 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.9 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -96,6 +96,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.9</h2>
+      <p>Paediatrics are here. The Paediatric Scenario button is now live, and choosing it generates stations for children from birth to fifteen, with the patient, history and vitals all scaled to age. Sixteen paediatric presentations are covered: Asthma, Stridor and Croup, Anaphylaxis, Burns, External Haemorrhage, Limb Injury, Shock from Blood Loss, Cardiac Arrest, Symptomatic Bradycardia, Seizure and Convulsion, Sickle Cell Crisis, Hypoglycaemia, Adrenal Insufficiency, Pyrexia, Sepsis, and an Abnormal Work of Breathing triage station that teaches the assessment and the branch decision. Dosing is shown in the proper paediatric weight-based and age-banded form throughout, with Advanced Paramedic steps dimmed as in the adult stations. The youngest patients are handled with care: under-threes are described the way you would actually assess a pre-verbal child, and a parent or guardian is almost always on scene to give the history, just as in real life. The croup station carries the epiglottitis warning, and the cardiac arrest station folds in post-resuscitation care. Adult and paediatric now sit cleanly side by side, with adults from sixteen up, so every age is covered with nothing falling between the two. Seed codes work in paediatric scenarios too, so you can share the exact same station with a classmate. As always, every clinical value has been checked against PHECC.</p>
       <h2>v0.9.8</h2>
       <p>Nine new adult presentations, taking the scenario library to twenty-five. New trauma stations: Head Injury (graded by conscious level, with the blood-pressure targets that protect the injured brain), Crush Injury (with the pre-release fluid teaching), Harness Suspension Trauma, and Limb Injury (fractures, dislocations and soft-tissue injuries, with a focus on checking circulation, sensation and movement before and after splinting). New medical stations: Acute Pulmonary Oedema (with the full CPAP criteria you need to know), Adrenal Insufficiency, Sickle Cell Crisis, Epistaxis, and a combined Behavioural and Mental Health Emergency covering capacity, de-escalation and scene safety. Decompression Illness has been added to the Environmental scenarios for divers. Two brand-new categories, Haematological and Behavioural, now feature in the library. More scenarios now model whether the emergency was witnessed or not, which changes the history you can gather and where you are likely to find the patient, so seizures, cardiac arrests and several others feel more true to life. Plus a round of realism fixes to scene descriptions and patient ages.</p>
       <h2>v0.9.7</h2>

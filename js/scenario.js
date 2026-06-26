@@ -99,9 +99,12 @@ function applyRelative(range, dev, age) {
 // no I/L/O/U to avoid misreads), grouped XXXX-XXX for readability. presIndex is the
 // index into PRESENTATIONS; if a future data change reorders them, fall back to random.
 const _SEED_ALPHA = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';   // Crockford base32
-function _encodeSeed(presIndex, seed) {
+function _encodeSeed(presIndex, seed, cohort) {
   // Combine into one big integer using BigInt (presIndex up to a few hundred, seed 32-bit).
-  let n = (BigInt(presIndex) << 32n) | BigInt(seed >>> 0);
+  // A cohort bit sits above presIndex (bit 48): 0 = adult (default, so existing adult
+  // codes are unchanged), 1 = paeds. Older codes decode as adult automatically.
+  const cohortBit = cohort === 'paeds' ? 1n : 0n;
+  let n = (cohortBit << 48n) | (BigInt(presIndex) << 32n) | BigInt(seed >>> 0);
   let out = '';
   if (n === 0n) out = '0';
   while (n > 0n) { out = _SEED_ALPHA[Number(n & 31n)] + out; n >>= 5n; }
@@ -120,9 +123,10 @@ function _decodeSeed(code) {
     n = (n << 5n) | BigInt(v);
   }
   const seed = Number(n & 0xFFFFFFFFn);
-  const presIndex = Number(n >> 32n);
+  const presIndex = Number((n >> 32n) & 0xFFFFn);
+  const cohort = ((n >> 48n) & 1n) === 1n ? 'paeds' : 'adult';
   if (presIndex < 0 || presIndex >= PRESENTATIONS.length) return null;  // stale/invalid
-  return { presIndex, seed };
+  return { presIndex, seed, cohort };
 }
 
 // ── CORE GENERATOR ───────────────────────────────────────────────────────────────
@@ -132,14 +136,17 @@ function _decodeSeed(code) {
 //   • presId only        → that presentation, random scenario (as before) + seedCode.
 //   • seedCode (2nd arg) → fully deterministic: presentation + scenario reproduced
 //                          from the code. Overrides presId.
-function generateScenario(presId, seedCode) {
+function generateScenario(presId, seedCode, cohort) {
   // Resolve a seed if a code was supplied. On any decode failure, fall through to
   // normal random generation (never throw on a bad/old code).
-  let _seed = null, _presIndexFromCode = null;
+  let _seed = null, _presIndexFromCode = null, _cohortFromCode = null;
   if (seedCode) {
     const dec = _decodeSeed(seedCode);
-    if (dec) { _seed = dec.seed >>> 0; _presIndexFromCode = dec.presIndex; }
+    if (dec) { _seed = dec.seed >>> 0; _presIndexFromCode = dec.presIndex; _cohortFromCode = dec.cohort; }
   }
+  // A code's cohort wins (so a shared paeds code reproduces as paeds); otherwise use the
+  // caller's cohort; default adult.
+  const _cohort = _cohortFromCode || cohort || 'adult';
   // If no seed came from a code, mint a fresh one so EVERY scenario is shareable.
   if (_seed == null) _seed = (Math.floor(Math.random() * 0xFFFFFFFF)) >>> 0;
 
@@ -151,22 +158,45 @@ function generateScenario(presId, seedCode) {
   const _prevLast = _lastPresId;
   _lastPresId = null;
   try {
-    return _generateScenarioInner(presId, _seed, _presIndexFromCode);
+    return _generateScenarioInner(presId, _seed, _presIndexFromCode, _cohort);
   } finally {
     _rand = _prevRand;
     _lastPresId = _prevLast;
   }
 }
 
-function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
+// Is a presentation playable in the given cohort? Paeds = has at least one variant that
+// can run at age <= 12; adult = at least one variant that can run at age >= 16. A variant's
+// floor is max(presentation.minAge, variant.minAge); its ceiling is min(pres.maxAge,
+// variant.maxAge). This is what lets an expanded presentation (adult variants pinned
+// minAge:16, paed variants maxAge:12) appear in BOTH cohorts but show the right variants.
+function _variantPlayable(pres, variant, cohort) {
+  const lo = Math.max(pres.demographics.minAge, variant.minAge || 0);
+  const hi = Math.min(pres.demographics.maxAge, variant.maxAge || Infinity);
+  if (cohort === 'paeds') return lo <= 15;     // a variant usable at or below 15
+  return hi >= 16;                              // a variant usable at or above 16
+}
+function _presHasCohort(pres, cohort) {
+  return pres.variants.some(v => _variantPlayable(pres, v, cohort));
+}
+
+function _generateScenarioInner(presId, _seed, _presIndexFromCode, cohort) {
+  cohort = cohort || 'adult';
   // Presentation selection MUST consume the RNG stream identically whether the
   // presentation comes from a code, an explicit presId, or a random pick — otherwise
   // the downstream draws (variant/age/vitals) are offset and a reload diverges.
   // So: ALWAYS draw one presentation index from the seeded RNG here. When a presId or
   // a code pins the presentation, we still draw (to keep the stream aligned) but use
   // the pinned index. The drawn-or-pinned index is what gets encoded.
+  //
+  // The random draw is taken from the cohort-eligible pool (paeds: presentations with a
+  // paed-capable variant; adult: presentations with an adult-capable variant). Reproduction
+  // is unaffected because a code pins the absolute index regardless of pool.
   let pres, presIndex;
-  const _drawnIndex = Math.floor(_rand() * PRESENTATIONS.length);   // always consume one draw
+  const _pool = PRESENTATIONS.filter(p => _presHasCohort(p, cohort));
+  const _poolOrAll = _pool.length ? _pool : PRESENTATIONS;
+  const _drawnPres = _poolOrAll[Math.floor(_rand() * _poolOrAll.length)];   // always consume one draw
+  const _drawnIndex = PRESENTATIONS.indexOf(_drawnPres);
   if (_presIndexFromCode != null) {
     presIndex = _presIndexFromCode;
   } else if (presId) {
@@ -177,16 +207,23 @@ function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
   }
   pres = PRESENTATIONS[presIndex];
   if (!pres) return null;
-  const seedCode = _encodeSeed(presIndex < 0 ? 0 : presIndex, _seed);
+  const seedCode = _encodeSeed(presIndex < 0 ? 0 : presIndex, _seed, cohort);
 
   // 1. Narrative variant (the cause/story). Picked first so it can constrain age.
-  const variant = _pick(pres.variants);
+  //    Constrained to the cohort: in paeds only paed-capable variants are eligible, in
+  //    adult only adult-capable ones. Falls back to all variants if (defensively) none match.
+  const _vpool = pres.variants.filter(v => _variantPlayable(pres, v, cohort));
+  const variant = _pick(_vpool.length ? _vpool : pres.variants);
 
   // 2. Patient within demographic constraints. A variant may raise the minimum age
   //    via `variant.minAge` (e.g. a Type 2 diabetic should not be a toddler); the
-  //    presentation floor still applies as the baseline.
-  const lo = Math.max(pres.demographics.minAge, variant.minAge || 0);
-  const hi = Math.min(pres.demographics.maxAge, variant.maxAge || Infinity);
+  //    presentation floor still applies as the baseline. In the paeds cohort the age
+  //    ceiling is capped at 12; in adult the floor is lifted to at least 16.
+  let lo = Math.max(pres.demographics.minAge, variant.minAge || 0);
+  let hi = Math.min(pres.demographics.maxAge, variant.maxAge || Infinity);
+  if (cohort === 'paeds') hi = Math.min(hi, 15);
+  else lo = Math.max(lo, 16);
+  if (lo > hi) { lo = Math.max(pres.demographics.minAge, variant.minAge || 0); hi = Math.min(pres.demographics.maxAge, variant.maxAge || Infinity); } // defensive
   let age;
   if (lo < 2 && _rand() < 0.25) age = _pick([0, 0.5, 1]);     // occasional infant
   else age = _ri(Math.max(1, Math.ceil(lo)), Math.floor(hi));
@@ -631,10 +668,9 @@ function scenarioChoiceHTML() {
         <span class="scen-cohort-ico">🧑</span>
         <span class="scen-cohort-txt"><span class="scen-cohort-name">Adult Scenario</span><span class="scen-cohort-sub">Generate an adult OSCE station</span></span>
       </button>
-      <button class="scen-cohort-btn scen-cohort-paeds scen-cohort-soon" id="scenPaedsBtn" disabled>
+      <button class="scen-cohort-btn scen-cohort-paeds" id="scenPaedsBtn">
         <span class="scen-cohort-ico">🧒</span>
         <span class="scen-cohort-txt"><span class="scen-cohort-name">Paediatric Scenario</span><span class="scen-cohort-sub">Generate a paediatric OSCE station</span></span>
-        <span class="scen-cohort-soon-badge">Coming soon</span>
       </button>
       <button class="scen-cohort-btn scen-cohort-mega scen-cohort-soon" id="scenMegaBtn" disabled>
         <span class="scen-cohort-ico">🏔️</span>
@@ -683,7 +719,7 @@ function wireScenarioTimer() {
 // Wire the two cohort buttons after the HTML is in the DOM.
 function wireScenarioChoice() {
   document.getElementById('scenAdultBtn')?.addEventListener('click', () => { openScenarioRunner('adult'); haptic(); });
-  document.getElementById('scenPaedsBtn')?.addEventListener('click', () => { showToast('Paediatric scenarios, coming soon'); });
+  document.getElementById('scenPaedsBtn')?.addEventListener('click', () => { openScenarioRunner('paeds'); haptic(); });
   document.getElementById('scenMegaBtn')?.addEventListener('click', () => { showToast('Mega OSCE, coming soon'); });
   wireScenarioTimer();
 }
@@ -745,7 +781,7 @@ function goScenario() {
   });
   document.getElementById('scenPaedsBtn')?.addEventListener('click', () => {
     if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
-    showToast('Paediatric scenarios, coming soon');
+    openScenarioRunner('paeds'); haptic();
   });
   document.getElementById('scenMegaBtn')?.addEventListener('click', () => {
     if (document.getElementById('scenSkipChk')?.checked) { G.scenIntroSeen = true; saveG(); }
@@ -926,13 +962,13 @@ function startScenario(presId, cohort, seedCode) {
     const cyc = setInterval(() => { mi = (mi + 1) % msgs.length; if (textEl) textEl.textContent = msgs[mi]; }, 280);
     setTimeout(() => {
       clearInterval(cyc);
-      const sc = generateScenario(presId, seedCode);
+      const sc = generateScenario(presId, seedCode, _scenCohort);
       renderScenarioCard(sc);
       armScenTimer();            // ready/paused at full time, waits for examiner to tap Start
       wireScenTimerControls();
     }, 900);
   } else {
-    const sc = generateScenario(presId, seedCode);
+    const sc = generateScenario(presId, seedCode, _scenCohort);
     renderScenarioCard(sc);
     armScenTimer();
     wireScenTimerControls();
