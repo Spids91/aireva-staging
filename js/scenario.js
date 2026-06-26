@@ -154,7 +154,42 @@ function generateScenario(presId) {
   let locPool = SCEN_LOCATIONS;
   if (variant.witness === 'unwitnessed')      locPool = SCEN_LOCATIONS.filter(l => l.solo);
   else if (variant.witness === 'witnessed')   locPool = SCEN_LOCATIONS.filter(l => !l.solo || l.found);
-  const location = _pick(locPool.length ? locPool : SCEN_LOCATIONS);  // {name, found, solo}
+  if (!locPool.length) locPool = SCEN_LOCATIONS;
+  // Location selection. Two SOFT weightings compose here, both layered on top of the witness
+  // filter (which already decided the eligible pool): (a) setting-bias, weighting locations
+  // whose `setting` matches the presentation's `locationBias` toward ~80% of picks; (b) age-fit,
+  // making age-inappropriate locations rare (a creche almost never holds an elderly patient).
+  // Age was chosen FIRST (clinically); location bends to fit age, never the reverse — an
+  // ill-fitting location is made unlikely, never impossible, and age is never altered to suit a scene.
+  let location;
+  {
+    const bias = Array.isArray(pres.locationBias) && pres.locationBias.length ? pres.locationBias : null;
+    // setting-bias weight: compute the per-fitting multiplier that targets ~80% fitting mass,
+    // matching the previous behaviour, but expressed as a per-location factor so it can multiply
+    // with the age factor below.
+    let setW = 1;
+    if (bias) {
+      const fit = locPool.filter(l => bias.includes(l.setting)).length;
+      const oth = locPool.length - fit;
+      if (fit && oth) setW = Math.max(1, Math.round((0.8 * oth) / (0.2 * fit)));  // weight on fitting locs
+    }
+    // age-fit factor: near-hard. A location tagged for the wrong age band becomes very rare.
+    // 'young' locations (creche/school) effectively never hold older patients; 'old' locations
+    // (nursing home/mart) effectively never hold children. Untagged/'mixed' = all ages (factor 1).
+    const ageFactor = (l) => {
+      if (!l.ageSkew || l.ageSkew === 'mixed') return 1;
+      if (l.ageSkew === 'young') return age <= 16 ? 1 : (age <= 30 ? 0.25 : 0.04);
+      if (l.ageSkew === 'old')   return age >= 45 ? 1 : (age >= 25 ? 0.25 : 0.06);
+      return 1;
+    };
+    const weighted = [];
+    for (const l of locPool) {
+      const sf = (bias && bias.includes(l.setting)) ? setW : 1;
+      const w = Math.max(1, Math.round(sf * ageFactor(l) * 100));  // scale so fractional age-factors survive
+      for (let k = 0; k < w; k++) weighted.push(l);
+    }
+    location = _pick(weighted.length ? weighted : locPool);
+  }
   const dispatch = variant.dispatch
     .replace('{location}', location.name)
     .replace('a PATIENT', `a ${ageLabel} ${personWord}`)
