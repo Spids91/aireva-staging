@@ -4,10 +4,27 @@
 // then a tap-to-reveal panel anchors their debrief. No marking, no branching.
 // Data comes from js/data/scenarios.js (SCEN_VITALS + DEV_PCT_BANDS + PRESENTATIONS).
 
+// ── RANDOM SOURCE (seedable) ───────────────────────────────────────────────────
+// The engine draws ALL randomness through _rand(). By default _rand IS Math.random,
+// so normal "Generate" taps behave byte-for-byte as before. When a scenario is
+// generated WITH a seed (shared/loaded), _rand is swapped for a deterministic
+// Mulberry32 PRNG for the duration of that one generation, then restored. Same seed
+// + same presentation data => identical scenario, on any device. (Mulberry32 is the
+// same family already used for drug-of-the-day in home.js.)
+let _rand = Math.random;                       // live random source (default: real random)
+function _mulberry32(a) {                       // returns a seeded () => [0,1) function
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 // ── HELPERS ──────────────────────────────────────────────────────────────────────
-function _ri(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; }       // int in [lo,hi]
-function _rf(lo, hi) { return Math.round((Math.random() * (hi - lo) + lo) * 10) / 10; } // 1-dp float
-function _pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function _ri(lo, hi) { return Math.floor(_rand() * (hi - lo + 1)) + lo; }       // int in [lo,hi]
+function _rf(lo, hi) { return Math.round((_rand() * (hi - lo) + lo) * 10) / 10; } // 1-dp float
+function _pick(arr) { return arr[Math.floor(_rand() * arr.length)]; }
 
 // Remembers the last presentation shown so the random picker never serves the
 // same presentation twice in a row. True random feels "broken" to users because
@@ -54,7 +71,7 @@ function resolveLimit(limit, age) {
 function applyRelative(range, dev, age) {
   const [lo, hi] = range;
   const maxPct = scenMaxPct(age) / 100;
-  const severity = 0.5 + Math.random() * 0.5;        // 0.5–1.0
+  const severity = 0.5 + _rand() * 0.5;        // 0.5–1.0
   const shiftFrac = maxPct * dev.intensity * severity;
   if (dev.dir === 'up') {
     const cap = resolveLimit(dev.cap, age);
@@ -71,10 +88,96 @@ function applyRelative(range, dev, age) {
   }
 }
 
+// ── SEED CODES ─────────────────────────────────────────────────────────────────
+// A scenario is reproducible from a compact code that encodes (a) the presentation
+// index and (b) a 32-bit RNG seed. Same code => same presentation + identical RNG
+// draws => identical scenario, provided the engine and that presentation's data are
+// unchanged. (Editing a presentation later may shift what an old code produces; this
+// is for "share a station with a classmate now", not a permanent archival id.)
+//
+// Wire format: a single integer = presIndex * 2^32 + seed, base32-encoded (Crockford,
+// no I/L/O/U to avoid misreads), grouped XXXX-XXX for readability. presIndex is the
+// index into PRESENTATIONS; if a future data change reorders them, fall back to random.
+const _SEED_ALPHA = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';   // Crockford base32
+function _encodeSeed(presIndex, seed) {
+  // Combine into one big integer using BigInt (presIndex up to a few hundred, seed 32-bit).
+  let n = (BigInt(presIndex) << 32n) | BigInt(seed >>> 0);
+  let out = '';
+  if (n === 0n) out = '0';
+  while (n > 0n) { out = _SEED_ALPHA[Number(n & 31n)] + out; n >>= 5n; }
+  // Group as XXXX-XXX… for legibility (4 then 3, padded enough for our range).
+  out = out.padStart(7, '0');
+  return out.slice(0, -3) + '-' + out.slice(-3);
+}
+function _decodeSeed(code) {
+  const clean = String(code).toUpperCase().replace(/[^0-9A-Z]/g, '')
+    .replace(/I/g, '1').replace(/L/g, '1').replace(/O/g, '0').replace(/U/g, 'V');
+  if (!clean) return null;
+  let n = 0n;
+  for (const ch of clean) {
+    const v = _SEED_ALPHA.indexOf(ch);
+    if (v < 0) return null;            // invalid character
+    n = (n << 5n) | BigInt(v);
+  }
+  const seed = Number(n & 0xFFFFFFFFn);
+  const presIndex = Number(n >> 32n);
+  if (presIndex < 0 || presIndex >= PRESENTATIONS.length) return null;  // stale/invalid
+  return { presIndex, seed };
+}
+
 // ── CORE GENERATOR ───────────────────────────────────────────────────────────────
-function generateScenario(presId) {
-  const pres = presId ? PRESENTATIONS.find(p => p.id === presId) : _pickPresentation();
+// generateScenario(presId?, seedCode?)
+//   • no args            → random presentation, random scenario (as before), but a
+//                          shareable `seedCode` is still captured onto the result.
+//   • presId only        → that presentation, random scenario (as before) + seedCode.
+//   • seedCode (2nd arg) → fully deterministic: presentation + scenario reproduced
+//                          from the code. Overrides presId.
+function generateScenario(presId, seedCode) {
+  // Resolve a seed if a code was supplied. On any decode failure, fall through to
+  // normal random generation (never throw on a bad/old code).
+  let _seed = null, _presIndexFromCode = null;
+  if (seedCode) {
+    const dec = _decodeSeed(seedCode);
+    if (dec) { _seed = dec.seed >>> 0; _presIndexFromCode = dec.presIndex; }
+  }
+  // If no seed came from a code, mint a fresh one so EVERY scenario is shareable.
+  if (_seed == null) _seed = (Math.floor(Math.random() * 0xFFFFFFFF)) >>> 0;
+
+  // Activate the deterministic RNG for this generation, then always restore.
+  const _prevRand = _rand;
+  _rand = _mulberry32(_seed);
+  // _lastPresId would make a seeded pick depend on prior history (breaking
+  // reproducibility); neutralise it for the seeded draw and restore after.
+  const _prevLast = _lastPresId;
+  _lastPresId = null;
+  try {
+    return _generateScenarioInner(presId, _seed, _presIndexFromCode);
+  } finally {
+    _rand = _prevRand;
+    _lastPresId = _prevLast;
+  }
+}
+
+function _generateScenarioInner(presId, _seed, _presIndexFromCode) {
+  // Presentation selection MUST consume the RNG stream identically whether the
+  // presentation comes from a code, an explicit presId, or a random pick — otherwise
+  // the downstream draws (variant/age/vitals) are offset and a reload diverges.
+  // So: ALWAYS draw one presentation index from the seeded RNG here. When a presId or
+  // a code pins the presentation, we still draw (to keep the stream aligned) but use
+  // the pinned index. The drawn-or-pinned index is what gets encoded.
+  let pres, presIndex;
+  const _drawnIndex = Math.floor(_rand() * PRESENTATIONS.length);   // always consume one draw
+  if (_presIndexFromCode != null) {
+    presIndex = _presIndexFromCode;
+  } else if (presId) {
+    const idx = PRESENTATIONS.findIndex(p => p.id === presId);
+    presIndex = idx >= 0 ? idx : _drawnIndex;
+  } else {
+    presIndex = _drawnIndex;
+  }
+  pres = PRESENTATIONS[presIndex];
   if (!pres) return null;
+  const seedCode = _encodeSeed(presIndex < 0 ? 0 : presIndex, _seed);
 
   // 1. Narrative variant (the cause/story). Picked first so it can constrain age.
   const variant = _pick(pres.variants);
@@ -85,7 +188,7 @@ function generateScenario(presId) {
   const lo = Math.max(pres.demographics.minAge, variant.minAge || 0);
   const hi = Math.min(pres.demographics.maxAge, variant.maxAge || Infinity);
   let age;
-  if (lo < 2 && Math.random() < 0.25) age = _pick([0, 0.5, 1]);     // occasional infant
+  if (lo < 2 && _rand() < 0.25) age = _pick([0, 0.5, 1]);     // occasional infant
   else age = _ri(Math.max(1, Math.ceil(lo)), Math.floor(hi));
   const sex = pres.demographics.sex === 'any' ? _pick(['male', 'female']) : pres.demographics.sex;
 
@@ -122,7 +225,7 @@ function generateScenario(presId) {
     const [lo, hi] = d.spo2Severe;                 // lo = sickest, hi = mildest
     const sev = Math.max(0, Math.min(1, variant.severity));
     const target = hi - sev * (hi - lo);           // sev 1 -> lo, sev 0 -> hi
-    const jittered = target + (Math.random() * 4 - 2); // +/- 2% jitter
+    const jittered = target + (_rand() * 4 - 2); // +/- 2% jitter
     spo2 = Math.max(lo, Math.min(hi, Math.round(jittered)));
   } else {
     spo2 = Array.isArray(d.spo2) ? _ri(d.spo2[0], d.spo2[1]) : _ri(band.spo2[0], band.spo2[1]);
@@ -319,7 +422,7 @@ function generateScenario(presId) {
       });
 
   return { pres, variant, age, sex, band, dispatch, ecg, conscious, location,
-           events, lastIntake, sample, opqrst, presentationText, arrest,
+           events, lastIntake, sample, opqrst, presentationText, arrest, seedCode,
            vitals: { hr, rr, spo2, sys, dia, temp, bgl } };
 }
 
@@ -422,6 +525,11 @@ function renderScenarioCard(sc) {
         <div class="scen-badge">OSCE Station</div>
         <div class="scen-title">Emergency Call</div>
       </div>
+      ${sc.seedCode ? `<button class="scen-seed" id="scenSeedBtn" title="Tap to copy this scenario's share code">
+        <span class="scen-seed-lbl">Seed</span>
+        <span class="scen-seed-code">${sc.seedCode}</span>
+        <span class="scen-seed-copy" id="scenSeedCopy">Copy</span>
+      </button>` : ''}
       <div class="scen-sec"><div class="scen-sec-title">Dispatch</div><div class="scen-dispatch">${sc.dispatch}</div></div>
       ${sec('Patient', [['Age', sc.age < 1 ? sc.band.label : `${sc.age} years`], ['Sex', sc.sex === 'male' ? 'Male' : 'Female']])}
       <div class="scen-sec"><div class="scen-sec-title">On Arrival</div><div class="scen-dispatch">${sc.presentationText}</div></div>
@@ -457,6 +565,18 @@ function renderScenarioCard(sc) {
       haptic();
     });
     document.getElementById('scenNewBtn')?.addEventListener('click', () => { startScenario(); haptic(); });
+    const seedBtn = document.getElementById('scenSeedBtn');
+    if (seedBtn) seedBtn.addEventListener('click', () => {
+      const code = sc.seedCode;
+      const done = () => {
+        const tag = document.getElementById('scenSeedCopy');
+        if (tag) { tag.textContent = 'Copied'; setTimeout(() => { if (tag) tag.textContent = 'Copy'; }, 1400); }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(done);
+      } else { done(); }   // copy may be unavailable in some webviews; still flash feedback
+      haptic();
+    });
   }
 }
 
@@ -619,10 +739,27 @@ function openScenarioRunner(cohort) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back
     </div>
     ${timerBar}
+    <div class="scen-load-row">
+      <input type="text" id="scenSeedInput" class="scen-seed-input" placeholder="Enter a seed code (e.g. K7F2-9QX)" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <button class="scen-load-btn" id="scenLoadBtn">Load</button>
+    </div>
     <div id="scenarioContent"></div>`;
   // Back returns to the cohort choice screen (goScenario), so the user can switch
   // between Adult and Paeds without leaving the feature. Stop any running timer first.
   document.getElementById('scenRunnerBack')?.addEventListener('click', () => { stopScenTimer(); goScenario(); });
+  // Load-by-seed: validate the code, then generate that exact station. Invalid or
+  // stale codes are flagged via toast and nothing is generated (the current card stays).
+  const loadBtn = document.getElementById('scenLoadBtn');
+  const seedInput = document.getElementById('scenSeedInput');
+  function _tryLoadSeed() {
+    const code = (seedInput?.value || '').trim();
+    if (!code) return;
+    if (!_decodeSeed(code)) { showToast('That seed code isn\u2019t valid'); haptic(); return; }
+    startScenario(undefined, cohort, code);
+    haptic();
+  }
+  if (loadBtn) loadBtn.addEventListener('click', _tryLoadSeed);
+  if (seedInput) seedInput.addEventListener('keydown', e => { if (e.key === 'Enter') _tryLoadSeed(); });
   startScenario(undefined, cohort);
 }
 
@@ -736,7 +873,7 @@ function wireScenTimerControls() {
 // does not change generation (all presentations are adult); it is threaded now so paeds
 // can filter here later (e.g. generateScenario with a cohort/age filter).
 let _scenCohort = 'adult';
-function startScenario(presId, cohort) {
+function startScenario(presId, cohort, seedCode) {
   if (cohort) _scenCohort = cohort;
   const wrap = document.getElementById('scenarioContent');
   // Brief "generating" beat — hints that each station is freshly built, and stops
@@ -753,13 +890,13 @@ function startScenario(presId, cohort) {
     const cyc = setInterval(() => { mi = (mi + 1) % msgs.length; if (textEl) textEl.textContent = msgs[mi]; }, 280);
     setTimeout(() => {
       clearInterval(cyc);
-      const sc = generateScenario(presId);
+      const sc = generateScenario(presId, seedCode);
       renderScenarioCard(sc);
       armScenTimer();            // ready/paused at full time, waits for examiner to tap Start
       wireScenTimerControls();
     }, 900);
   } else {
-    const sc = generateScenario(presId);
+    const sc = generateScenario(presId, seedCode);
     renderScenarioCard(sc);
     armScenTimer();
     wireScenTimerControls();
