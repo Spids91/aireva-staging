@@ -321,7 +321,7 @@ const PRESENTATIONS = [
         events:'Became progressively drowsy at home; took their usual medication and reportedly a little extra.',
         vitalsOverride:{ rr:[10,12], spo2:[92,96] } },
       // V3: found unresponsive, severe → the found-down, limited-history case.
-      { cause:'opioid toxidrome, found unresponsive', conscious:false,
+      { cause:'opioid toxidrome, found unresponsive', conscious:false, witness:'unwitnessed',
         dispatch:'You are called to {location} for a PATIENT found unresponsive.',
         presentation:'Unresponsive, very slow breathing, pinpoint pupils, pale and cyanosed.',
         allergies:'Unknown.',
@@ -447,19 +447,19 @@ const PRESENTATIONS = [
         sample:{ symptoms:'Sweaty, trembling and pale, anxious and a little muddled but fully awake, answering slowly. Airway own, can swallow.', medications:'Levemir and NovoRapid.', pmh:'Type 1 diabetes, well controlled.' },
         events:'Known diabetic on insulin; took the usual dose then did far more physical activity than normal without eating extra, and started feeling shaky and confused over the last 20 minutes.' },
       // UNCONSCIOUS / unable to swallow → leads toward IM glucagon.
-      { cause:'collapse, unresponsive', conscious:false,
+      { cause:'collapse, unresponsive', conscious:false, witness:'unwitnessed',
         dispatch:'You are called to {location} for a PATIENT who has collapsed.',
         presentation:'Slumped and unresponsive to voice, only groaning to a painful stimulus, profuse sweating, cool clammy skin. NOT able to swallow or protect their own airway.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Slumped, unresponsive to voice, groans to pain, profuse sweating, cool clammy skin. Not protecting airway, cannot swallow.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
         events:'Witnessed by passers-by to be well earlier, then became vacant and slumped over a short time ago. No medical history available.' },
-      { cause:'unresponsive', conscious:false,
+      { cause:'unresponsive', conscious:false, witness:'unwitnessed',
         dispatch:'You are called to {location} for a PATIENT who is unconscious.',
         presentation:'Unrousable to voice, withdraws to pain only, sweaty and pale, breathing on their own. Cannot swallow safely, no gag/airway protection.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Unrousable to voice, withdraws to pain, sweaty and pale, breathing spontaneously. No airway protection, cannot swallow safely.', medications:'Diabetic, on injections (family unsure of the names).', pmh:'Diabetes (per family).', lastIntake:'Unknown.' },
         events:'Known diabetic; became unresponsive a short time ago, family present and able to give a brief history.' },
-      { cause:'found drowsy at home, unresponsive', conscious:false,
+      { cause:'found drowsy at home, unresponsive', conscious:false, witness:'witnessed', onsetWhen:'earlier this evening',
         dispatch:'You are called to {location} for a PATIENT who cannot be roused.',
         presentation:'Deeply drowsy, responds only to a painful stimulus with a groan, profusely sweaty with cold clammy skin, breathing on their own. NOT able to swallow or protect their own airway.',
         allergies:'No known drug allergies.',
@@ -1165,7 +1165,7 @@ const PRESENTATIONS = [
     variants: [
       // ── POSTICTAL (conscious:true) ───────────────────────────────────────────
       // V1: known epilepsy, postictal. Brand-named anticonvulsant (MEDREF-resolving).
-      { cause:'known epilepsy, postictal', conscious:true,
+      { cause:'known epilepsy, postictal', conscious:true, witness:'witnessed', onsetWhen:'about 15 minutes ago',
         dispatch:'You are called to {location} for a PATIENT who has had a seizure.',
         presentation:'Drowsy and confused, gradually coming round, no longer convulsing. Has been incontinent and the tongue looks bitten. Rousable and slowly orienting.',
         allergies:'No known drug allergies.',
@@ -1173,7 +1173,7 @@ const PRESENTATIONS = [
         opqrst:{ onset:'The seizure came on suddenly a short while ago.', provocation:'Nothing makes it better or worse.', quality:'No pain. Drowsy and muddled after the seizure.', radiates:'No.', severity:'0', time:'A few minutes ago; now settling.' },
         events:'Known epilepsy; had a witnessed generalised seizure that stopped on its own, now postictal.' },
       // V3: first-ever seizure, postictal. No history, the "is this their first?" teaching.
-      { cause:'first-ever seizure, postictal', conscious:true,
+      { cause:'first-ever seizure, postictal', conscious:true, witness:'witnessed', onsetWhen:'about 20 minutes ago',
         dispatch:'You are called to {location} for a PATIENT who collapsed and shook.',
         presentation:'Postictal and confused, slowly coming round. Witnesses describe generalised shaking that has now stopped. Looks frightened and disorientated.',
         allergies:'No known drug allergies.',
@@ -1181,7 +1181,7 @@ const PRESENTATIONS = [
         opqrst:{ onset:'Collapsed suddenly with no warning, per witnesses.', provocation:'Nothing makes it better or worse.', quality:'No pain. Confused and frightened.', radiates:'No.', severity:'0', time:'A few minutes ago.' },
         events:'No known epilepsy; collapsed and had a witnessed convulsion, the first time this has ever happened.' },
       // V4: alcohol-withdrawal seizure, postictal. Withdrawal context in history, not S/S.
-      { cause:'alcohol-withdrawal seizure, postictal', conscious:true,
+      { cause:'alcohol-withdrawal seizure, postictal', conscious:true, witness:'unwitnessed',
         dispatch:'You are called to {location} for a PATIENT who had a fit.',
         presentation:'Postictal, tremulous and sweaty, confused but rousable. Visibly shaky and anxious.',
         allergies:'No known drug allergies.',
@@ -1190,7 +1190,7 @@ const PRESENTATIONS = [
         events:'Heavy regular drinker who stopped a couple of days ago; had a witnessed seizure.' },
       // V6: post-head-injury seizure, postictal. Visible injury is an OBSERVED sign (S/S ok);
       //     the mechanism (the fall/blow) is the cause, elicited via Events.
-      { cause:'post-head-injury seizure, postictal', conscious:true,
+      { cause:'post-head-injury seizure, postictal', conscious:true, witness:'witnessed', onsetWhen:'about 15 minutes ago',
         dispatch:'You are called to {location} for a PATIENT who collapsed and convulsed.',
         presentation:'Postictal and confused, with a visible graze and swelling to the side of the head and a small scalp laceration. Slowly orienting.',
         allergies:'No known drug allergies.',
@@ -1199,7 +1199,7 @@ const PRESENTATIONS = [
         events:'Had a fall with a knock to the head earlier, then a witnessed convulsion.' },
       // ── ACTIVELY SEIZING (conscious:false) ───────────────────────────────────
       // V2: prolonged active seizure. The benzodiazepine pathway case.
-      { cause:'prolonged active seizure', conscious:false,
+      { cause:'prolonged active seizure', conscious:false, witness:'witnessed',
         dispatch:'You are called to {location} for a PATIENT who is fitting.',
         presentation:'Actively convulsing, generalised tonic-clonic movements ongoing for several minutes, not responding, frothing at the mouth, cyanosed around the lips. Still seizing on your arrival.',
         allergies:'Unknown.',
@@ -1207,7 +1207,7 @@ const PRESENTATIONS = [
         events:'Witnessed to start seizing several minutes ago and has not stopped, prompting the call.',
         vitalsOverride:{ hr:{ dir:'up', intensity:0.45 }, spo2:[88,94] } },
       // V5: recurrent seizures / status. Repeated seizures without recovery.
-      { cause:'recurrent seizures without recovery', conscious:false,
+      { cause:'recurrent seizures without recovery', conscious:false, witness:'witnessed',
         dispatch:'You are called to {location} for a PATIENT having repeated fits.',
         presentation:'Has had repeated seizures without fully recovering in between, now convulsing again, not responsive between episodes. Airway noisy with secretions.',
         allergies:'Unknown.',
@@ -1388,21 +1388,21 @@ const PRESENTATIONS = [
     demographics: { minAge: 16, maxAge: 90, sex: 'any' },
     variants: [
       // V1: Basic Life Support — rhythm not yet determined (pads going on). The BLS spine.
-      { cause:'cardiac arrest, basic life support', conscious:false, arrestRhythm:'Not yet determined (pads being attached)',
+      { cause:'cardiac arrest, basic life support', conscious:false, witness:'witnessed', arrestRhythm:'Not yet determined (pads being attached)',
         dispatch:'You are called to {location} for a PATIENT who has collapsed and is not breathing.',
         presentation:'Unresponsive, not breathing normally, no pulse. Bystanders are present and CPR is being attempted.',
         allergies:'Unknown.',
         sample:{ symptoms:'Unresponsive, not breathing normally, no palpable pulse.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
         events:'Witnessed to collapse suddenly a few minutes ago, with bystander CPR started straight away.' },
       // V2: VF / pulseless VT — shockable. The defibrillation pathway.
-      { cause:'cardiac arrest, VF or pulseless VT', conscious:false, arrestRhythm:'VF / pulseless VT (shockable)',
+      { cause:'cardiac arrest, VF or pulseless VT', conscious:false, witness:'witnessed', arrestRhythm:'VF / pulseless VT (shockable)',
         dispatch:'You are called to {location} for a PATIENT in cardiac arrest with CPR in progress.',
         presentation:'Unresponsive, pulseless, not breathing. The monitor shows a shockable rhythm.',
         allergies:'Unknown.',
         sample:{ symptoms:'Unresponsive, pulseless, not breathing; monitor shows a shockable rhythm.', medications:'Unknown.', pmh:'Unknown.', lastIntake:'Unknown.' },
         events:'Clutched the chest and collapsed in front of bystanders, who began CPR immediately.' },
       // V3: PEA — non-shockable, reversible-cause thinking. Cue seeded ~half the time.
-      { cause:'cardiac arrest, pulseless electrical activity', conscious:false, arrestRhythm:'PEA (organised rhythm, no pulse)',
+      { cause:'cardiac arrest, pulseless electrical activity', conscious:false, witness:'unwitnessed', arrestRhythm:'PEA (organised rhythm, no pulse)',
         dispatch:'You are called to {location} for a PATIENT who has collapsed and is unresponsive.',
         presentation:'Unresponsive, pulseless, not breathing. The monitor shows organised electrical activity but there is no pulse.',
         allergies:'Unknown.',
@@ -1922,7 +1922,7 @@ const PRESENTATIONS = [
         events:'Significant head injury, now drowsy and has vomited.',
         vitalsOverride:{ hr:{ dir:'up', intensity:0.25 }, bpSys:[100,118], bpDia:[64,80] } },
       // V4: Severe, GCS <=8 — responds to pain only, irregular breathing. Time-critical.
-      { cause:'severe head injury', conscious:false,
+      { cause:'severe head injury', conscious:false, witness:'unwitnessed',
         dispatch:'You are called to {location} for a PATIENT who is unresponsive after a head injury.',
         presentation:'Unresponsive to voice after a significant head injury, responding only to pain, with irregular breathing and a boggy swelling to the scalp.',
         allergies:'Unknown.',
@@ -1931,7 +1931,7 @@ const PRESENTATIONS = [
         events:'Significant head injury, now responding only to pain with irregular breathing.',
         vitalsOverride:{ hr:{ dir:'up', intensity:0.2 }, bpSys:[110,128], bpDia:[70,86], spo2Severe:true } },
       // V5: Rising ICP / Cushing's — deteriorating, unequal pupils, bradycardic + hypertensive.
-      { cause:'rising intracranial pressure', conscious:false,
+      { cause:'rising intracranial pressure', conscious:false, witness:'unwitnessed',
         dispatch:'You are called to {location} for a PATIENT deteriorating after a head injury.',
         presentation:'Deteriorating conscious level after a head injury, with one pupil larger than the other, vomiting, and becoming slow in pulse with a rising blood pressure.',
         allergies:'Unknown.',
@@ -1940,7 +1940,7 @@ const PRESENTATIONS = [
         events:'Head injury with a deteriorating conscious level and unequal pupils.',
         vitalsOverride:{ hr:{ dir:'down', intensity:0.4 }, bpSys:[160,195], bpDia:[95,115] } },
       // V6: Head injury with seizure — postictal, drowsy.
-      { cause:'head injury with seizure', conscious:true,
+      { cause:'head injury with seizure', conscious:true, witness:'witnessed', onsetWhen:'about 15 minutes ago',
         dispatch:'You are called to {location} for a PATIENT who had a seizure after a head injury.',
         presentation:'Postictal and drowsy after a seizure that followed a head injury, with a scalp laceration and slow recovery of awareness.',
         allergies:'No known drug allergies.',
