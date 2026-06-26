@@ -3369,13 +3369,13 @@ const PRESENTATIONS = [
         { type:'note', body:'Signs of inadequate perfusion: tachypnoea, diminished or absent peripheral pulses, delayed capillary refill, cool extremities, mottling, unresponsive.' },
       ],
       pathwayBlocks: [
-        { type:'step', body:'Oxygen. If hypoxic, positive pressure ventilation 12 to 20 per minute.' },
-        { type:'branch', label:'HR under 60 with inadequate perfusion and unresponsive', body:'CPR. NaCl 0.9% 20 mL/kg IV/IO (AP). Adrenaline (1:10,000) 10 mcg/kg IV/IO repeat every 3 to 5 minutes PRN (AP).' },
+        { type:'step', body:'Oxygen. Apply ECG and SpO2 monitoring. If hypoxic, positive pressure ventilation 12 to 20 per minute.' },
+        { type:'branch', label:'HR under 60 with inadequate perfusion and unresponsive', body:'Begin compressions. NaCl 0.9% 20 mL/kg IV/IO (AP). Adrenaline (1:10,000) 10 mcg/kg IV/IO repeat every 3 to 5 minutes PRN (AP).' },
         { type:'note', body:'Treat like an arrest: oxygenate, ventilate, compress.' },
       ],
       interventionsBlocks: [
         { type:'lead', body:'Oxygenate and ventilate first; this is usually a hypoxic cause.' },
-        { type:'note', body:'Compress if HR under 60 with poor perfusion. Adrenaline and fluids are Advanced Paramedic.' },
+        { type:'note', body:'Begin compressions if HR under 60 with poor perfusion. Adrenaline and fluids are Advanced Paramedic.' },
       ],
       drugs: [
         { name:'Adrenaline (1:10,000)',

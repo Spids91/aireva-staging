@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.11 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.12 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -119,6 +119,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.12</h2>
+      <p>Small fixes to the paediatric Symptomatic Bradycardia scenario: the pathway now includes applying ECG and SpO2 monitoring, and the wording around chest compressions has been clarified.</p>
       <h2>v0.9.11</h2>
       <p>New Accessibility settings. A Reduce Motion option calms the app for anyone who prefers less movement: it switches off the confetti, the floating snowflake, the badge pop-ups and the other animations, and it follows your device setting automatically the first time. A Text Size option lets you choose Normal, Large or Extra Large, scaling the whole app up for easier reading. Both live in a new Accessibility section in Settings and are remembered between sessions. Scenario pathways are also clearer: Advanced Paramedic steps now carry the same amber AP marker in the step-by-step pathway as they do in the drug list, so it is obvious at a glance which actions sit above Paramedic scope.</p>
       <h2>v0.9.10</h2>
