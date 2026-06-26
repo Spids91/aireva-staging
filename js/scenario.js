@@ -600,9 +600,13 @@ function renderScenarioCard(sc) {
     const lead = v.lead ? `<span class="scen-dose-lead">${escapeHtml(v.lead)}</span>` : '';
     const renderGroup = (route, bands) => {
       const routeLbl = route ? `<span class="scen-dose-route">${escapeHtml(route)}</span>` : '';
-      const bubbles = (bands || []).map(b =>
-        `<span class="scen-dose-band"><span class="scen-dose-age">${escapeHtml(b[0])}</span><span class="scen-dose-amt">${escapeHtml(b[1])}</span></span>`
-      ).join('');
+      const bubbles = (bands || []).map(b => {
+        // A band is [ageRange, dose]. When the age range is empty (a single weight-based
+        // dose with no age banding, e.g. IN 200mcg/kg), render just the dose with no
+        // empty age slot, so the bubble reads cleanly.
+        const age = b[0] ? `<span class="scen-dose-age">${escapeHtml(b[0])}</span>` : '';
+        return `<span class="scen-dose-band">${age}<span class="scen-dose-amt">${escapeHtml(b[1])}</span></span>`;
+      }).join('');
       return `${routeLbl}<span class="scen-dose-bands">${bubbles}</span>`;
     };
     let body;

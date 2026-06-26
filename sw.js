@@ -1,4 +1,4 @@
-const C='aireva-20260626213832';
+const C='aireva-20260626214833';
 const BASE='.';
 // Core assets: cached atomically (install fails if any are missing — they always exist).
 const ASSETS=[BASE+'/',BASE+'/index.html',BASE+'/manifest.json',BASE+'/css/style.css',BASE+'/css/fonts.css',

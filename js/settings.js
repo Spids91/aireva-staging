@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.12 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.13 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');

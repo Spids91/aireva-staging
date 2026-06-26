@@ -1417,10 +1417,10 @@ const PRESENTATIONS = [
       drugs: [
         { name:'Midazolam (actively seizing)',
           adult:{ paramedic:'10mg buccal, 5mg IN, or 5mg IM.', ap:'2.5mg IV/IO.' },
-          paed:{ paramedic:{ route:'Buccal', bands:[['<3 mths','0.3mg/kg (max 2.5mg)'],['3 mths\u2013<1 yr','2.5mg'],['1\u2013<5 yrs','5mg'],['5\u2013<10 yrs','7.5mg'],['\u226510 yrs','10mg']], note:'Or IN 200mcg/kg.' }, ap:'IV/IO: 100mcg/kg.' } },
+          paed:{ paramedic:{ groups:[ { route:'Buccal', bands:[['<3 mths','0.3mg/kg (max 2.5mg)'],['3 mths\u2013<1 yr','2.5mg'],['1\u2013<5 yrs','5mg'],['5\u2013<10 yrs','7.5mg'],['\u226510 yrs','10mg']] }, { route:'IN', bands:[['','200mcg/kg']] } ] }, ap:'IV/IO: 100mcg/kg.' } },
         { name:'Diazepam (actively seizing)',
           adult:{ paramedic:'Not in Paramedic scope.', ap:'10mg PR, or 5mg IV/IO.' },
-          paed:{ paramedic:'Not in Paramedic scope.', ap:{ lead:'IV/IO: 100mcg/kg.', route:'Or PR', bands:[['\u22651 mth\u2013<2 yrs','5mg'],['\u22652\u2013<12 yrs','5\u201310mg'],['\u226512 yrs','10mg']] } } },
+          paed:{ paramedic:'Not in Paramedic scope.', ap:{ groups:[ { route:'IV/IO', bands:[['','100mcg/kg']] }, { route:'Or PR', bands:[['\u22651 mth\u2013<2 yrs','5mg'],['\u22652\u2013<12 yrs','5\u201310mg'],['\u226512 yrs','10mg']] } ] } } },
         { name:'Benzodiazepine limit',
           paed:{ paramedic:'Maximum 4 benzodiazepine doses regardless of route. A dose given before arrival counts. Do not exceed the adult dose.' } },
         { name:'Oxygen Therapy',
