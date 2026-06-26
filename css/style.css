@@ -1595,7 +1595,7 @@ ul { list-style: none; }
 /* ─── SCENARIO TIMER ───────────────────────────────────────────────────────── */
 /* Choice-screen control: toggle + slider (slider hidden until toggled on). */
 .scen-timer-ctrl { margin-top:14px; padding:12px 14px; border-radius:var(--r12);
-  background:var(--surf2); border:1px solid var(--border); }
+  background:var(--surf); border:1px solid var(--border); box-shadow:var(--shadow); }
 .scen-timer-row { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
 .scen-timer-label { font-size:var(--text-sm); font-weight:700; color:var(--text2); }
 .scen-timer-toggle { position:relative; width:44px; height:26px; border-radius:var(--r-pill);
