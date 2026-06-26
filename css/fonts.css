@@ -1,0 +1,53 @@
+/* ─── LOCAL INTER FONT ─────────────────────────────────────────────────────────
+   Self-hosted Inter so the app needs no network connection for fonts. This is what
+   makes the app TRULY offline (the previous Google Fonts <link> failed with no signal,
+   silently falling back to system fonts). The woff2 files live in /fonts.
+
+   To populate the font files (one-time, run on your machine from the project root):
+
+     npm install @fontsource/inter
+     cp node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2 fonts/inter-400.woff2
+     cp node_modules/@fontsource/inter/files/inter-latin-500-normal.woff2 fonts/inter-500.woff2
+     cp node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2 fonts/inter-600.woff2
+     cp node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2 fonts/inter-700.woff2
+     cp node_modules/@fontsource/inter/files/inter-latin-800-normal.woff2 fonts/inter-800.woff2
+
+   (Or download the same five weights from any Inter source and name them inter-NNN.woff2.)
+   The font-display:swap means that even before the files are present, the app renders
+   in the system fallback rather than blocking, so nothing breaks in the meantime. */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/inter-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/inter-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/inter-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/inter-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('../fonts/inter-800.woff2') format('woff2');
+}

@@ -2,15 +2,22 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
+<!-- Security hardening (GitHub Pages can't set HTTP headers, so these are meta-equivalents).
+     Pragmatic CSP: locks the app to its own origin and blocks external scripts, plugins,
+     base-tag injection and clickjacking. 'unsafe-inline' is permitted for script/style
+     because the app uses inline handlers and styles throughout; the only untrusted input
+     (user notes) is HTML-escaped at render, so there is no inline-injection vector to begin
+     with. The real value here is blocking external script loads and off-origin exfiltration. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+<meta name="referrer" content="no-referrer"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <meta name="theme-color" content="#0F172A"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Aireva Medic"/>
 <link rel="manifest" href="manifest.json"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"/>
+<link rel="stylesheet" href="css/fonts.css"/>
 <link rel="stylesheet" href="css/style.css"/>
 <title>Aireva Medic</title>
 </head>
