@@ -83,7 +83,7 @@ function generateScenario(presId) {
   //    via `variant.minAge` (e.g. a Type 2 diabetic should not be a toddler); the
   //    presentation floor still applies as the baseline.
   const lo = Math.max(pres.demographics.minAge, variant.minAge || 0);
-  const hi = pres.demographics.maxAge;
+  const hi = Math.min(pres.demographics.maxAge, variant.maxAge || Infinity);
   let age;
   if (lo < 2 && Math.random() < 0.25) age = _pick([0, 0.5, 1]);     // occasional infant
   else age = _ri(Math.max(1, Math.ceil(lo)), Math.floor(hi));

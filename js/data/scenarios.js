@@ -1502,8 +1502,8 @@ const PRESENTATIONS = [
         events:'Got into difficulty in the water and was pulled out by bystanders.',
         vitalsOverride:{ hr:{ dir:'up', intensity:0.35 }, rr:{ dir:'up', intensity:0.4 }, spo2:[88,94] } },
       // V4: Decompression illness (the bends) — recent SCUBA, joint/limb pain, conscious.
-      { cause:'decompression illness', conscious:true,
-        dispatch:'You are called to {location} for a DIVER who is unwell after a dive.',
+      { cause:'decompression illness', conscious:true, maxAge:65,
+        dispatch:'You are called to a coastal dive site for a PATIENT who is unwell after a dive.',
         presentation:'Deep aching pain in the joints and limbs with a blotchy rash and tingling, having surfaced from a SCUBA dive a short time ago, breathless and uncomfortable.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Deep aching joint and limb pain, blotchy rash, tingling, breathless, uncomfortable.', medications:'Nil regular.', pmh:'Nil of note.', lastIntake:'Before the dive.' },
@@ -1511,8 +1511,8 @@ const PRESENTATIONS = [
         events:'Was SCUBA diving within the last 48 hours and became unwell after surfacing.',
         vitalsOverride:{ hr:{ dir:'up', intensity:0.25 } } },
       // V5: Severe / neurological decompression illness — confused/weak, time-critical.
-      { cause:'neurological decompression illness', conscious:true,
-        dispatch:'You are called to {location} for a DIVER who is confused and weak after a dive.',
+      { cause:'neurological decompression illness', conscious:true, maxAge:65,
+        dispatch:'You are called to a coastal dive site for a PATIENT who is confused and weak after a dive.',
         presentation:'Confused and weak with unsteadiness and altered sensation down one side, having surfaced from a SCUBA dive, deteriorating and frightened.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Confused, weak, unsteady, altered sensation down one side, deteriorating.', medications:'Nil regular.', pmh:'Nil of note.', lastIntake:'Before the dive.' },
@@ -2083,7 +2083,7 @@ const PRESENTATIONS = [
     variants: [
       // V1: Still suspended, conscious, legs dependent.
       { cause:'suspended in harness, conscious', conscious:true,
-        dispatch:'You are called to {location} for a WORKER whose fall has been arrested by a harness.',
+        dispatch:'You are called to a workplace at height for a PATIENT whose fall has been arrested by a harness.',
         presentation:'Hanging in a harness with the legs dependent after a fall was arrested, conscious and talking but anxious, with a feeling of light-headedness.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Suspended in a harness, legs dependent, conscious, anxious, light-headed.', medications:'Nil regular.', pmh:'Nil of note.', lastIntake:'Earlier today.' },
@@ -2092,7 +2092,7 @@ const PRESENTATIONS = [
         vitalsOverride:{ hr:{ dir:'up', intensity:0.3 } } },
       // V2: Just rescued, at risk of reflow collapse.
       { cause:'just rescued from suspension', conscious:true,
-        dispatch:'You are called to {location} for a WORKER just lowered after their fall was arrested by a harness.',
+        dispatch:'You are called to a workplace at height for a PATIENT just lowered after their fall was arrested by a harness.',
         presentation:'Just lowered to the ground after a period suspended in a harness, conscious but pale and clammy, feeling faint as they are repositioned.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Just lowered after suspension, pale, clammy, feeling faint on repositioning.', medications:'Nil regular.', pmh:'Nil of note.', lastIntake:'Earlier.' },
@@ -2101,7 +2101,7 @@ const PRESENTATIONS = [
         vitalsOverride:{ hr:{ dir:'up', intensity:0.45 }, bpSys:[92,108], bpDia:[58,72] } },
       // V3: Prolonged suspension with shock.
       { cause:'prolonged suspension with shock', conscious:true,
-        dispatch:'You are called to {location} for a WORKER suspended in a harness for a prolonged period.',
+        dispatch:'You are called to a workplace at height for a PATIENT suspended in a harness for a prolonged period.',
         presentation:'Suspended in a harness for a prolonged period, now drowsy, pale and clammy with a fast pulse and a low blood pressure.',
         allergies:'No known drug allergies.',
         sample:{ symptoms:'Prolonged suspension, drowsy, pale, clammy, fast pulse, low blood pressure.', medications:'Nil regular.', pmh:'Nil of note.', lastIntake:'Several hours ago.' },
