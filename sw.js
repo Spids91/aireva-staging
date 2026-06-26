@@ -1,8 +1,8 @@
-const C='aireva-20260626181033';
+const C='aireva-20260626181938';
 const BASE='.';
 // Core assets: cached atomically (install fails if any are missing — they always exist).
 const ASSETS=[BASE+'/',BASE+'/index.html',BASE+'/manifest.json',BASE+'/css/style.css',BASE+'/css/fonts.css',
-  BASE+'/js/data/medications.js',BASE+'/js/data/hospitals.js',BASE+'/js/data/terms.js',BASE+'/js/data/medref.js',BASE+'/js/data/scenarios.js',BASE+'/js/data/osce-stations.js',
+  BASE+'/js/data/medications.js',BASE+'/js/data/hospitals.js',BASE+'/js/data/terms.js',BASE+'/js/data/medref.js',BASE+'/js/data/scenarios.js',
   BASE+'/js/app.js',BASE+'/js/home.js',BASE+'/js/reference.js',BASE+'/js/medref.js',BASE+'/js/detail.js',
   BASE+'/js/quiz.js',BASE+'/js/scenario.js',BASE+'/js/study.js',BASE+'/js/settings.js'];
 // Optional assets: cached best-effort. The font woff2 files may not be present until the
