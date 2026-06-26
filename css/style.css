@@ -11,7 +11,7 @@
   --primary-light: #EFF6FF;   /* tinted background */
   --primary-mid:   #DBEAFE;   /* border/subtle */
 
-  --success:       #00875A;   /* deep green — correct, mastered, positive */
+  --success:       #007A50;   /* deep green — correct, mastered, positive (WCAG AA: darkened from #00875A for 4.5:1 on light) */
   --success-dark:  #006644;
   --success-light: #E3F9F0;
   --success-mid:   #B3E8D5;
@@ -20,13 +20,13 @@
   --error-light:   #FEE2E2;
   --error-mid:     #FCA5A5;
 
-  --warning:       #D97706;   /* amber — AP scope, caution */
+  --warning:       #A85708;   /* amber — AP scope, caution (WCAG AA: darkened from #D97706 for 4.5:1 on light) */
   --warning-light: #FEF3C7;
 
   /* COLOURS — Scope */
   --emt:   #059669;   /* EMT green */
   --par:   #2563EB;   /* Paramedic cobalt — same as primary */
-  --ap:    #D97706;   /* Advanced Paramedic amber */
+  --ap:    #A85708;   /* Advanced Paramedic amber (matches --warning) */
 
   /* COLOURS — Surfaces (light mode) */
   --bg:      #F4F2EE;   /* warm off-white background */
@@ -107,6 +107,13 @@
   --text3:   #64748B;
   --text4:   #475569;
   --hdr-bg:  #0A1221;
+  /* Scope colours in dark mode: amber restored to #D97706 (the light-mode darkening is
+     too dark on dark surfaces, and #D97706 already clears 4.5:1 here). Cobalt and green
+     are kept saturated because --primary/--success are used as button/badge BACKGROUNDS
+     with white text, which needs a dark-enough fill; lightening them broke that. Where
+     they appear as small text on dark they sit on tinted pill backgrounds that aid legibility. */
+  --warning: #D97706;
+  --ap:      #D97706;
   --shadow:    0 2px 8px rgba(0,0,0,.3);
   --shadow-md: 0 4px 16px rgba(0,0,0,.35);
   --shadow-lg: 0 8px 32px rgba(0,0,0,.4);
