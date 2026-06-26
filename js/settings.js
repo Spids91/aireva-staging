@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.10 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.11 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -8,7 +8,30 @@ function openSettings() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const toggle = document.getElementById('darkToggle');
   if (toggle) toggle.classList.toggle('on', isDark);
+  syncAccessibilityControls();
   haptic();
+}
+
+// Reflect the current accessibility prefs in the settings UI (toggle + segmented control).
+function syncAccessibilityControls() {
+  const rm = document.getElementById('reduceMotionToggle');
+  if (rm) rm.classList.toggle('on', reduceMotionOn());
+  const seg = document.getElementById('textSizeSeg');
+  if (seg) {
+    const cur = (typeof G !== 'undefined' && G.textSize) ? G.textSize : 'normal';
+    seg.querySelectorAll('.settings-seg-btn').forEach(b =>
+      b.classList.toggle('on', b.getAttribute('data-size') === cur));
+  }
+}
+
+function settingsToggleReduceMotion() {
+  setReduceMotion(!reduceMotionOn());
+  syncAccessibilityControls();
+}
+
+function settingsSetTextSize(size) {
+  setTextSize(size);
+  syncAccessibilityControls();
 }
 
 function closeSettings() {
@@ -96,6 +119,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.11</h2>
+      <p>New Accessibility settings. A Reduce Motion option calms the app for anyone who prefers less movement: it switches off the confetti, the floating snowflake, the badge pop-ups and the other animations, and it follows your device setting automatically the first time. A Text Size option lets you choose Normal, Large or Extra Large, scaling the whole app up for easier reading. Both live in a new Accessibility section in Settings and are remembered between sessions. Scenario pathways are also clearer: Advanced Paramedic steps now carry the same amber AP marker in the step-by-step pathway as they do in the drug list, so it is obvious at a glance which actions sit above Paramedic scope.</p>
       <h2>v0.9.10</h2>
       <p>Scenario doses are easier to read. Where a drug has different doses by age, each age band now sits in its own bubble inside the Drugs and Doses panel, so you can find the right band at a glance instead of reading through a run-on line. A paediatric paracetamol dosing display has been corrected, and a round of dose wording was tidied so age ranges render cleanly throughout. Dark mode is easier on the eyes too: the cobalt and green used for small text and numbers have been lightened in dark mode so they meet accessibility contrast standards, while buttons and badges keep their full colour. Light mode is unchanged.</p>
       <h2>v0.9.9</h2>

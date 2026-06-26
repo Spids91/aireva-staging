@@ -111,7 +111,9 @@ let G={
   scenIntroSeen:false,
   prestige:0,
   scenTimerOn:false,
-  scenTimerMins:10
+  scenTimerMins:10,
+  reduceMotion:null,   // null = not yet set (first run falls back to OS prefers-reduced-motion)
+  textSize:'normal'    // 'normal' | 'large' | 'xlarge'
 };
 
 // Load the saved game state, then BACKFILL any fields missing from older saves.
@@ -171,9 +173,9 @@ function showLevelUp(level){
   document.getElementById('luLevelName').textContent=level.name+prestigeStars(G.prestige);
   const card=document.getElementById('luCard');
   if(card)card.style.background=level.gradient;
-  // Build confetti
+  // Build confetti (skipped entirely when reduce-motion is on)
   const confettiWrap=document.getElementById('luConfetti');
-  if(confettiWrap){
+  if(confettiWrap && !reduceMotionOn()){
     const colors=['#FCD34D','#34D399','#60A5FA','#F87171','#C4B5FD','#FB923C'];
     let html='';
     for(let i=0;i<40;i++){
@@ -399,6 +401,38 @@ function toggleDark(){
 }
 function loadTheme(){
   try{const t=localStorage.getItem('tusMedicTheme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}
+}
+
+// ── ACCESSIBILITY (reduce motion + text size) ────────────────────────────────
+// Applied on load and whenever changed. Both are persisted in G (saveG). Reduce
+// motion defaults, on first run only, to the OS prefers-reduced-motion hint, so a
+// user who set it system-wide gets it automatically; thereafter their explicit
+// in-app choice always wins (so no one is trapped if their OS has it on).
+function osPrefersReducedMotion(){
+  try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; }
+}
+function reduceMotionOn(){
+  // G.reduceMotion is the source of truth once set; null means "use the OS hint".
+  return G.reduceMotion === null || G.reduceMotion === undefined ? osPrefersReducedMotion() : !!G.reduceMotion;
+}
+function applyAccessibility(){
+  const h=document.documentElement;
+  if(!h || typeof h.setAttribute!=='function') return;
+  h.setAttribute('data-reduce-motion', reduceMotionOn() ? 'on' : 'off');
+  h.setAttribute('data-text-size', G.textSize || 'normal');
+}
+function setReduceMotion(on){
+  G.reduceMotion = !!on;
+  saveG();
+  applyAccessibility();
+  haptic();
+}
+function setTextSize(size){
+  if(size!=='normal' && size!=='large' && size!=='xlarge') size='normal';
+  G.textSize = size;
+  saveG();
+  applyAccessibility();
+  haptic();
 }
 
 function checkOnline(){document.getElementById('offlineBar').classList.toggle('show',!navigator.onLine);}
@@ -846,7 +880,7 @@ function scrollToHospital(pcr){
 window.addEventListener('online',checkOnline);
 window.addEventListener('offline',checkOnline);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDet();});
-loadG();loadTheme();checkOnline();checkStreakOnLoad();checkDisclaimer();updateHdr();
+loadG();loadTheme();applyAccessibility();checkOnline();checkStreakOnLoad();checkDisclaimer();updateHdr();
 // Register the service worker only on the web. Inside the Capacitor native shell the
 // app is served from the bundled assets, so the SW is unnecessary (and can interfere
 // with native asset serving), hence the Capacitor guard.
@@ -865,6 +899,9 @@ function updateDarkToggle(){
 let _eggCooldown=false;
 function copyrightEasterEgg(){
   if(_eggCooldown)return;          // prevent spam / overlapping bursts
+  // Honour reduce-motion: no confetti burst. Give a small haptic so the tap still
+  // acknowledges, but produce no large motion.
+  if(reduceMotionOn()){ haptic(); return; }
   _eggCooldown=true;
   setTimeout(()=>{_eggCooldown=false;},6000);
   const layer=document.getElementById('eggConfetti');

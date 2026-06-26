@@ -504,9 +504,14 @@ function _generateScenarioInner(presId, _seed, _presIndexFromCode, cohort) {
 // it falls back to the plain prose string. The "AP only" phrase inside any body
 // is turned into the same amber pill used in the drugs section.
 function apPillify(text) {
-  // Wrap a parenthetical "(AP only)" or bare "AP only" mention in the amber pill.
+  // Wrap a scope marker in the amber AP pill so Advanced Paramedic steps stand out in
+  // pathway/branch prose the same way they do in the drug list. Handles both the long
+  // "(AP only)" form and the short "(AP)" form used in pathway branches. The longer
+  // parenthetical sentence form (e.g. "(AP may give ...)") is left as prose on purpose,
+  // it is a clause, not a scope tag, so pilling it would read oddly.
   return String(text)
     .replace(/\(AP only\)/g, '<span class="scen-ap-pill">AP only</span>')
+    .replace(/\(AP\)/g, '<span class="scen-ap-pill">AP</span>')
     .replace(/\bIV is AP only\b/g, 'IV is <span class="scen-ap-pill">AP only</span>');
 }
 function renderRevealField(title, blocks, fallbackStr) {

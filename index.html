@@ -124,6 +124,23 @@
         <div class="settings-row-label">Dark Mode</div>
         <div class="settings-toggle" id="darkToggle"></div>
       </div>
+      <div class="settings-section-label">Accessibility</div>
+      <div class="settings-row" onclick="settingsToggleReduceMotion()">
+        <div class="settings-row-icon">🎢</div>
+        <div class="settings-row-label">Reduce Motion</div>
+        <div class="settings-toggle" id="reduceMotionToggle"></div>
+      </div>
+      <div class="settings-row-stack">
+        <div class="settings-row-stack-top">
+          <div class="settings-row-icon">🔠</div>
+          <div class="settings-row-label">Text Size</div>
+        </div>
+        <div class="settings-seg" id="textSizeSeg">
+          <button class="settings-seg-btn" data-size="normal" onclick="settingsSetTextSize('normal')">Normal</button>
+          <button class="settings-seg-btn" data-size="large" onclick="settingsSetTextSize('large')">Large</button>
+          <button class="settings-seg-btn" data-size="xlarge" onclick="settingsSetTextSize('xlarge')">Extra Large</button>
+        </div>
+      </div>
       <div class="settings-section-label">Guide</div>
       <div class="settings-row" onclick="replayOnboarding()">
         <div class="settings-row-icon">👋</div>
@@ -166,7 +183,7 @@
       <div class="settings-row-info">
         <div class="settings-row-icon">ℹ️</div>
         <div class="settings-row-label">Version</div>
-        <div class="settings-row-value">v0.9.10</div>
+        <div class="settings-row-value">v0.9.11</div>
       </div>
       <div class="settings-row-info" onclick="copyrightEasterEgg()" style="cursor:pointer">
         <div class="settings-row-icon">©️</div>
