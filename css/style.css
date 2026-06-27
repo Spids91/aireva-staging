@@ -723,16 +723,17 @@ ul { list-style: none; }
   text-align: left; font-weight: 500; cursor: pointer;
   -webkit-tap-highlight-color: transparent; transition: all var(--dur-fast) var(--ease);
   font-family: var(--font);
-  display: flex; align-items: center; justify-content: space-between; gap: var(--sp3);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp3);
 }
+.mc-opt-txt { flex: 1; min-width: 0; line-height: 1.4; overflow-wrap: anywhere; word-break: break-word; }
 .mc-opt:active { transform: scale(.97); }
 /* After answering, the correct option always shows a tick and the user's wrong pick shows a
    cross. Only the user's own wrong choice is reddened (not every wrong answer), and the tick
    on the correct one tells them which was right, the least-confusing way to signal both. */
 .mc-opt.correct { background: var(--success-light); border-color: var(--success-mid); color: var(--success); font-weight: 700; }
 .mc-opt.wrong   { background: var(--error-light);   border-color: var(--error-mid);   color: var(--error); }
-.mc-opt.correct::after { content: "✓"; font-size: 16px; font-weight: 800; flex-shrink: 0; }
-.mc-opt.wrong::after   { content: "✗"; font-size: 16px; font-weight: 800; flex-shrink: 0; }
+.mc-opt.correct::after { content: "✓"; font-size: 16px; font-weight: 800; flex-shrink: 0; line-height: 1.4; }
+.mc-opt.wrong::after   { content: "✗"; font-size: 16px; font-weight: 800; flex-shrink: 0; line-height: 1.4; }
 .mc-opt.revealed { pointer-events: none; }
 [data-theme="dark"] .mc-opt.correct { background: rgba(0,135,90,.2); border-color: var(--success); color: #6EE7B7; }
 [data-theme="dark"] .mc-opt.wrong   { background: rgba(220,38,38,.15); border-color: var(--error); color: #FCA5A5; }

@@ -28,10 +28,23 @@ const EASY_Q = [
   { id:'fact',  prompt:'Key Clinical Fact',q: d => `What is the key clinical fact for ${d.name}?`,           a: d => d.quizHints.keyFact },
   { id:'scope', prompt:'Scope',            q: d => `Which practitioners can administer ${d.name}?`,          a: d => d.scope.join(', ') },
 ];
+// Builds the short clue shown by the "Identify the Drug" question from a drug's keyFact.
+// Takes a leading chunk capped at ~64 chars but always broken at a word boundary, so it can
+// never cut through a number (e.g. "1:1,000" or "8.4%") or a word. If the whole fact is short
+// it's used as-is; otherwise the chunk gets a trailing ellipsis.
+function idClue(fact) {
+  const f = String(fact).trim();
+  if (f.length <= 64) return f;
+  let cut = f.slice(0, 64);
+  const lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace > 30) cut = cut.slice(0, lastSpace);
+  return cut.replace(/[,.:;\s]+$/, '') + '…';
+}
+
 const HARD_Q = [
   { id:'contra',prompt:'Contraindications',  q: d => `Name key contraindications for ${d.name}`,            a: d => d.contraindications.slice(0,3).join('; ') },
   { id:'mech',  prompt:'Mechanism of Action',q: d => `What is the mechanism of action of ${d.name}?`,       a: d => d.quizHints.mechanism },
-  { id:'id',    prompt:'Identify the Drug',  q: d => `"${d.quizHints.keyFact.split('—')[0].trim()}", which drug?`, a: d => `${d.name} (${d.classification})` },
+  { id:'id',    prompt:'Identify the Drug',  q: d => `"${idClue(d.quizHints.keyFact)}", which drug?`, a: d => `${d.name} (${d.classification})` },
   { id:'class', prompt:'Classification',     q: d => `What class of drug is ${d.name}?`,                    a: d => d.classification },
   { id:'route', prompt:'Administration',     q: d => `What are the routes of administration for ${d.name}?`,a: d => Array.isArray(d.administration) ? d.administration.join(', ') : d.administration },
   { id:'side',  prompt:'Side Effects',       q: d => `Name the main side effects of ${d.name}`,             a: d => d.sideEffects.slice(0,3).join('; ') },
@@ -689,8 +702,13 @@ function renderMC() {
   const drugId  = q.isTerm ? null : q.drug.id;
   const opts = document.getElementById('mcOpts');
   if (opts) opts.innerHTML = q.opts.map(opt => {
-    const short = opt.length > 110 ? opt.substring(0,107)+'…' : opt;
-    return `<button class="mc-opt" onclick="answerMC(this,${opt===correct},${drugId})">${short}</button>`;
+    // Most answers are short. Key-fact answers can run to ~120 chars and should show in full;
+    // only genuinely runaway answers (e.g. multi-line dose blocks) get trimmed. The bubble
+    // wraps to multiple lines, so length is about readability, not horizontal clipping.
+    const flat = String(opt).replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+    const short = flat.length > 160 ? flat.substring(0,157)+'…' : flat;
+    const isCorrect = opt === correct;
+    return `<button class="mc-opt" data-correct="${isCorrect}" onclick="answerMC(this,${isCorrect},${drugId})"><span class="mc-opt-txt">${short}</span></button>`;
   }).join('');
 }
 function answerMC(btn, correct, drugId) {
@@ -709,8 +727,10 @@ function answerMC(btn, correct, drugId) {
     if (drugId) srNextDate(drugId, false);
     haptic('error');
     const ca = getQAns(q);
+    // Mark the correct option by its tagged attribute (robust to truncation/formatting),
+    // rather than re-matching the displayed text.
     document.querySelectorAll('.mc-opt').forEach(o => {
-      if (o.textContent === ca || o.textContent === ca.substring(0,107)+'…') o.classList.add('correct');
+      if (o.getAttribute('data-correct') === 'true') o.classList.add('correct');
     });
   }
   G.totalQ++;

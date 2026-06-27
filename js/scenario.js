@@ -511,6 +511,7 @@ function apPillify(text) {
   // it is a clause, not a scope tag, so pilling it would read oddly.
   return String(text)
     .replace(/\(AP only\)/g, '<span class="scen-ap-pill">AP only</span>')
+    .replace(/\(Advanced Paramedic\)/g, '<span class="scen-ap-pill">AP</span>')
     .replace(/\(AP\)/g, '<span class="scen-ap-pill">AP</span>')
     .replace(/\bIV is AP only\b/g, 'IV is <span class="scen-ap-pill">AP only</span>');
 }
