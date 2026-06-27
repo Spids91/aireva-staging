@@ -38,6 +38,7 @@ const MEGA_CASES = [
 
   {
     id:'M1', title:'Sepsis + Asthma', cohort:'adult',
+    threadSources: ['asthma','sepsis'],
     age:[16,75], sex:'any', conscious:true,
     dispatch:'You are called to {location} for a PATIENT who is feverish and struggling to breathe.',
     presentation:'Hot and flushed, breathing fast with an audible wheeze and increased work of breathing, looks unwell and tired, sweaty.',
@@ -82,6 +83,7 @@ const MEGA_CASES = [
 
   {
     id:'M3', title:'Stroke vs Hypoglycaemia', cohort:'adult',
+    threadSources: [null,'hypoglycaemia'],
     age:[45,90], sex:'any', conscious:true,
     presentation:'Facial droop and one-sided weakness, slurred or confused speech, sweaty and drowsy, pale.',
     sample:{
@@ -117,6 +119,7 @@ const MEGA_CASES = [
 
   {
     id:'M4', title:'Anaphylaxis + Asthma', cohort:'adult',
+    threadSources: ['anaphylaxis','asthma'],
     age:[16,75], sex:'any', conscious:true,
     presentation:'Widespread itchy rash with swelling of the lips and face, marked wheeze and work of breathing, anxious, flushed.',
     sample:{
@@ -156,6 +159,7 @@ const MEGA_CASES = [
 
   {
     id:'M5', title:'Seizure + Head Injury', cohort:'adult',
+    threadSources: ['seizure','headinjury'],
     age:[16,85], sex:'any', conscious:true,
     dispatch:'You are called to {location} for a PATIENT who had a seizure and struck their head.',
     presentation:'Drowsy and confused after the event, slow to orientate, with a visible scalp wound or bruising to the head, slurred and groggy.',
@@ -199,6 +203,7 @@ const MEGA_CASES = [
 
   {
     id:'M6', title:'Sepsis + Hypoglycaemia', cohort:'adult',
+    threadSources: ['hypoglycaemia','sepsis'],
     age:[16,90], sex:'any', conscious:true,
     presentation:'Hot and flushed, sweaty and drowsy, looks unwell, poor recent intake, pale and clammy.',
     sample:{
@@ -238,6 +243,7 @@ const MEGA_CASES = [
 
   {
     id:'M7', title:'COPD + Acute Coronary Syndrome', cohort:'adult',
+    threadSources: ['copd','acs'],
     age:[45,90], sex:'any', conscious:true,
     presentation:'Breathless with a wheezy, quiet chest, central chest tightness, sweaty and grey, distressed, pursed-lip breathing.',
     sample:{
@@ -278,6 +284,7 @@ const MEGA_CASES = [
 
   {
     id:'M9', title:'COPD + Sepsis', cohort:'adult',
+    threadSources: ['copd','sepsis'],
     age:[45,90], sex:'any', conscious:true,
     dispatch:'You are called to {location} for a PATIENT with COPD who is feverish and more breathless than usual.',
     presentation:'Hot and flushed, breathless with a wheezy or crackly chest and increased work of breathing, productive cough, looks unwell and tired.',
@@ -321,6 +328,7 @@ const MEGA_CASES = [
 
   {
     id:'MT1', title:'External Haemorrhage + Hypothermia', cohort:'adult',
+    threadSources: [null,null],
     age:[16,80], sex:'any', conscious:true,
     dispatch:'You are called to {location} for a PATIENT with serious bleeding after an injury outdoors.',
     locationPool:['a roadside','a building site','a remote rural track','a riverbank','a car park'],
@@ -361,6 +369,7 @@ const MEGA_CASES = [
 
   {
     id:'MT3', title:'Limb Injury + Hypoglycaemia', cohort:'adult',
+    threadSources: ['limbinjury','hypoglycaemia'],
     age:[16,80], sex:'any', conscious:true,
     dispatch:'You are called to {location} for a single-vehicle road traffic collision; the driver is still in the car.',
     locationPool:['a roadside','a rural road','a motorway hard shoulder','a junction'],
@@ -403,6 +412,7 @@ const MEGA_CASES = [
 
   {
     id:'MP1', title:'Sepsis + Seizure', cohort:'paed',
+    threadSources: ['seizure','sepsisPaed'],
     age:[1,12], sex:'any', conscious:true, guardian:true,
     dispatch:'You are called to {location} for a CHILD who had a seizure and is hot and unwell.',
     presentation:'Drowsy and floppy after the event, hot and flushed, looks unwell, with cool peripheries and a prolonged capillary refill.',
@@ -447,6 +457,7 @@ const MEGA_CASES = [
 
   {
     id:'MP2', title:'Asthma + Anaphylaxis', cohort:'paed',
+    threadSources: ['anaphylaxis','asthma'],
     age:[3,12], sex:'any', conscious:true, guardian:true,
     presentation:'Itchy rash with lip and face swelling, marked wheeze and work of breathing, anxious and distressed, flushed.',
     sample:{
@@ -487,6 +498,7 @@ const MEGA_CASES = [
 
   {
     id:'MP3', title:'Croup + Sepsis', cohort:'paed',
+    threadSources: ['stridorPaed','sepsisPaed'],
     age:[1,6], sex:'any', conscious:true, guardian:true,
     dispatch:'You are called to {location} for a CHILD with noisy breathing who is hot and unwell.',
     presentation:'A barking cough and stridor, hot and flushed, looks toxic and more unwell than simple croup, increased work of breathing, with cool peripheries and a prolonged capillary refill.',

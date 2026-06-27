@@ -1086,6 +1086,7 @@ function generateMegaScenario(cohort) {
     spo2Note: c.spo2Note || null,
     vInit, reassessSet, reassessNote,
     reveal: c.reveal,
+    threadSources: c.threadSources || [],
     drugs: c.drugs,
     isAdult: age > 15,
   };
@@ -1123,30 +1124,44 @@ function renderMegaCard(sc) {
     return rows;
   };
 
-  // The Vital Signs section is custom for mega: the INITIAL set, then a "Reassess (5 min)"
-  // tap-to-reveal that STACKS the repeat set beneath (so the student can compare to baseline),
-  // available BEFORE the diagnosis reveal (an active reassessment decision during the station).
+  // The Vital Signs section shows the INITIAL set, then two reassessment buttons, improving and
+  // deteriorating, computed by the SAME rule engine the normal scenarios use (nudged toward or
+  // away from the patient's age-appropriate normal range). The examiner reveals whichever fits
+  // the candidate's performance. The patient's age drives the nudge, so paed mega cases get paed
+  // ranges automatically.
   const initRows = vitalRowsFor(sc.vInit, true);
-  const reRows = vitalRowsFor(sc.reassessSet, false);
-  // Flag changed values so the deterioration/response is visible at a glance.
-  const changedReRows = reRows.map(([k, val]) => {
-    const initRow = initRows.find(r => r[0] === k);
-    const changed = initRow && initRow[1] !== val;
-    return [k, `${val}${changed ? ' <span class="scen-vital-changed">●</span>' : ''}`];
-  });
+  const improved = computeReassessVitals(sc.vInit, sc.age, +1);
+  const declined = computeReassessVitals(sc.vInit, sc.age, -1);
+  const reassessRowsFor = (vv) => {
+    const rows = [
+      ['Heart Rate', `${vv.hr} bpm`, vv.hr !== sc.vInit.hr],
+      ['Resp Rate', `${vv.rr} /min`, vv.rr !== sc.vInit.rr],
+      ['SpO₂', `${vv.spo2}%`, vv.spo2 !== sc.vInit.spo2],
+      ['Blood Pressure', `${vv.sys}/${vv.dia} mmHg`, vv.sys !== sc.vInit.sys || vv.dia !== sc.vInit.dia],
+      ['BGL', `${vv.bgl} mmol/L`, vv.bgl !== sc.vInit.bgl],
+      ['Temperature', `${vv.temp}°C`, vv.temp !== sc.vInit.temp],
+    ];
+    return rows.map(([k, val, changed]) =>
+      `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}${changed ? ' <span class="scen-vital-changed">●</span>' : ''}</span></div>`
+    ).join('');
+  };
   const vitalSignsSection = `
     <div class="scen-sec scen-vitals-mega">
       <div class="scen-sec-title">Vital Signs</div>
       <div class="scen-rows">
         ${initRows.map(([k, val]) => `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}</span></div>`).join('')}
       </div>
-      <button class="scen-reassess-btn" id="scenReassessBtn">Reassess — 5 minutes later</button>
-      <div class="scen-reassess" id="scenReassess" style="display:none">
-        <div class="scen-reassess-label">Reassessment (5 minutes later)</div>
-        <div class="scen-rows">
-          ${changedReRows.map(([k, val]) => `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}</span></div>`).join('')}
-        </div>
-        ${sc.reassessNote ? `<div class="scen-reassess-note">${escapeHtml(sc.reassessNote)}</div>` : ''}
+      <div class="scen-reassess-buttons">
+        <button class="scen-reassess-btn scen-reassess-improve" id="scenImproveBtn">Show improving vitals</button>
+        <button class="scen-reassess-btn scen-reassess-decline" id="scenDeclineBtn">Show deteriorating vitals</button>
+      </div>
+      <div class="scen-reassess scen-reassess-set" id="scenImproveSet" style="display:none">
+        <div class="scen-reassess-label scen-reassess-label-improve">Improving (5 minutes later)</div>
+        <div class="scen-rows">${reassessRowsFor(improved)}</div>
+      </div>
+      <div class="scen-reassess scen-reassess-set" id="scenDeclineSet" style="display:none">
+        <div class="scen-reassess-label scen-reassess-label-decline">Deteriorating (5 minutes later)</div>
+        <div class="scen-rows">${reassessRowsFor(declined)}</div>
       </div>
     </div>`;
 
@@ -1171,13 +1186,33 @@ function renderMegaCard(sc) {
 
   // Reveal: two threads, each rendered with the shared block renderer. apPillify the bodies
   // so AP-scope steps get the amber pill, consistent with the rest of the app.
-  const threadHtml = sc.reveal.threads.map(t => {
-    const inner = t.blocks.map(b => {
-      if (b.type === 'lead') return `<div class="rv-lead">${apPillify(b.body)}</div>`;
-      if (b.type === 'branch') return `<div class="rv-block rv-branch"><div class="rv-tag">${escapeHtml(b.label)}</div><div class="rv-body">${apPillify(b.body)}</div></div>`;
-      if (b.type === 'note') return `<div class="rv-block rv-note">${b.label ? `<div class="rv-tag">${escapeHtml(b.label)}</div>` : ''}<div class="rv-body">${apPillify(b.body)}</div></div>`;
-      return `<div class="rv-block rv-step"><div class="rv-body">${apPillify(b.body)}</div></div>`;
-    }).join('');
+  const threadHtml = sc.reveal.threads.map((t, ti) => {
+    // If this thread maps to a source presentation, pull that presentation's REAL Pathway and
+    // Interventions (the same clinically-reviewed content the standalone scenario shows) so the
+    // mega reveal has full depth and never drifts from the single-presentation version. Where
+    // there is no clean source (a mimic, or a fully-authored thread like hypothermia), fall back
+    // to the thread's own authored blocks.
+    const srcId = Array.isArray(sc.threadSources) ? sc.threadSources[ti] : null;
+    const src = srcId && typeof PRESENTATIONS !== 'undefined'
+      ? PRESENTATIONS.find(p => p.id === srcId) : null;
+    let inner;
+    if (src && src.reveal) {
+      // Lead line from the authored thread (the "why these go together" framing), then the
+      // source presentation's full pathway + interventions.
+      const leadBlock = t.blocks.find(b => b.type === 'lead');
+      const leadHtml = leadBlock ? `<div class="rv-lead">${apPillify(leadBlock.body)}</div>` : '';
+      inner = leadHtml
+        + renderRevealField('Pathway', src.reveal.pathwayBlocks, src.reveal.pathway)
+        + renderRevealField('Interventions', src.reveal.interventionsBlocks, src.reveal.interventions);
+    } else {
+      // Authored fallback (the original thread blocks).
+      inner = t.blocks.map(b => {
+        if (b.type === 'lead') return `<div class="rv-lead">${apPillify(b.body)}</div>`;
+        if (b.type === 'branch') return `<div class="rv-block rv-branch"><div class="rv-tag">${escapeHtml(b.label)}</div><div class="rv-body">${apPillify(b.body)}</div></div>`;
+        if (b.type === 'note') return `<div class="rv-block rv-note">${b.label ? `<div class="rv-tag">${escapeHtml(b.label)}</div>` : ''}<div class="rv-body">${apPillify(b.body)}</div></div>`;
+        return `<div class="rv-block rv-step"><div class="rv-body">${apPillify(b.body)}</div></div>`;
+      }).join('');
+    }
     return `<div class="scen-mega-thread"><div class="scen-mega-thread-title">${escapeHtml(t.title)}</div>${inner}</div>`;
   }).join('');
 
@@ -1243,15 +1278,25 @@ function renderMegaCard(sc) {
   if (!wrap) return;
   wrap.innerHTML = html;
 
-  // Reassess tap-to-reveal (inside the Vital Signs bubble, before the diagnosis reveal).
-  const reBtn = document.getElementById('scenReassessBtn'), reBox = document.getElementById('scenReassess');
-  if (reBtn && reBox) reBtn.addEventListener('click', () => {
-    const open = reBox.style.display !== 'none';
-    reBox.style.display = open ? 'none' : 'block';
-    reBtn.textContent = open ? 'Reassess — 5 minutes later' : 'Hide reassessment';
-    if (!open) requestAnimationFrame(() => reBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
-    haptic();
-  });
+  // Improving / deteriorating reassessment reveals (same mutually-exclusive behaviour as the
+  // normal scenarios): showing one hides the other; tapping the active button again hides it.
+  const impBtn = document.getElementById('scenImproveBtn'), impSet = document.getElementById('scenImproveSet');
+  const decBtn = document.getElementById('scenDeclineBtn'), decSet = document.getElementById('scenDeclineSet');
+  if (impBtn && impSet && decBtn && decSet) {
+    const setShown = (whichSet, whichBtn, otherSet, otherBtn, showLabel, hideLabel, otherShowLabel) => {
+      const open = whichSet.style.display !== 'none';
+      whichSet.style.display = open ? 'none' : 'block';
+      whichBtn.textContent = open ? showLabel : hideLabel;
+      whichBtn.classList.toggle('active', !open);
+      otherSet.style.display = 'none';
+      otherBtn.textContent = otherShowLabel;
+      otherBtn.classList.remove('active');
+      if (!open) requestAnimationFrame(() => whichSet.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+      haptic();
+    };
+    impBtn.addEventListener('click', () => setShown(impSet, impBtn, decSet, decBtn, 'Show improving vitals', 'Hide improving vitals', 'Show deteriorating vitals'));
+    decBtn.addEventListener('click', () => setShown(decSet, decBtn, impSet, impBtn, 'Show deteriorating vitals', 'Hide deteriorating vitals', 'Show improving vitals'));
+  }
 
   // Diagnosis reveal (mirrors the normal card).
   const rb = document.getElementById('scenRevealBtn'), rv = document.getElementById('scenReveal');

@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.16 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.17 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -119,6 +119,8 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.17</h2>
+      <p>Mega OSCE stations are fuller and more consistent. The reveal now shows the complete pathway and interventions for each of the two problems, the same management detail you get in the standalone scenarios, so nothing is left short. Mega stations also now carry the same two reassessment options as every other scenario: show an improving set or a deteriorating set five minutes on, so an examiner can steer the station by how the candidate is performing. Paediatric Mega cases use paediatric observations and dosing throughout.</p>
       <h2>v0.9.16</h2>
       <p>Scenario reassessment just got more useful. Every scenario now offers two reassessment options under the vital signs: show an improving set or a deteriorating set, five minutes on. An examiner can hand the candidate whichever fits how the station is going, the improving picture when interventions are on point, the deteriorating one when something is being missed. Changed readings are marked so the trajectory is clear at a glance.</p>
       <p>The Daily Challenge now focuses on EMT and Paramedic scope, so the everyday questions stay relevant to road practice.</p>
