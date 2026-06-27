@@ -1,4 +1,4 @@
-// ─── SETTINGS.JS v0.9.14 ───────────────────────────────────────────────────────
+// ─── SETTINGS.JS v0.9.16 ───────────────────────────────────────────────────────
 
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
@@ -119,6 +119,10 @@ const LEGAL = {
   patches: {
     title: 'Patch Notes',
     body: `
+      <h2>v0.9.16</h2>
+      <p>Scenario reassessment just got more useful. Every scenario now offers two reassessment options under the vital signs: show an improving set or a deteriorating set, five minutes on. An examiner can hand the candidate whichever fits how the station is going, the improving picture when interventions are on point, the deteriorating one when something is being missed. Changed readings are marked so the trajectory is clear at a glance.</p>
+      <p>The Daily Challenge now focuses on EMT and Paramedic scope, so the everyday questions stay relevant to road practice.</p>
+      <p>Quiz answers are clearer too: the correct option now carries a tick, and a wrong choice is marked with a cross, so there is no doubt how you did on each question.</p>
       <h2>v0.9.14</h2>
       <p>Mega OSCE is here. The third scenario mode puts a single patient in front of you with more than one thing going on at once, the kind of layered presentation you meet on the road, where the obvious problem is not the whole picture. A set of curated cases spans adult, paediatric and trauma. Every Mega station carries two sets of observations: an initial set and a reassessment five minutes later, revealed when you tap to reassess, so you can see the patient evolving and practise catching the change. Work the patient first, then reveal to see both problems and the management for each. Find it on the third button on the scenario screen.</p>
       <h2>v0.9.12</h2>

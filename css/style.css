@@ -723,10 +723,16 @@ ul { list-style: none; }
   text-align: left; font-weight: 500; cursor: pointer;
   -webkit-tap-highlight-color: transparent; transition: all var(--dur-fast) var(--ease);
   font-family: var(--font);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp3);
 }
 .mc-opt:active { transform: scale(.97); }
+/* After answering, the correct option always shows a tick and the user's wrong pick shows a
+   cross. Only the user's own wrong choice is reddened (not every wrong answer), and the tick
+   on the correct one tells them which was right, the least-confusing way to signal both. */
 .mc-opt.correct { background: var(--success-light); border-color: var(--success-mid); color: var(--success); font-weight: 700; }
 .mc-opt.wrong   { background: var(--error-light);   border-color: var(--error-mid);   color: var(--error); }
+.mc-opt.correct::after { content: "✓"; font-size: 16px; font-weight: 800; flex-shrink: 0; }
+.mc-opt.wrong::after   { content: "✗"; font-size: 16px; font-weight: 800; flex-shrink: 0; }
 .mc-opt.revealed { pointer-events: none; }
 [data-theme="dark"] .mc-opt.correct { background: rgba(0,135,90,.2); border-color: var(--success); color: #6EE7B7; }
 [data-theme="dark"] .mc-opt.wrong   { background: rgba(220,38,38,.15); border-color: var(--error); color: #FCA5A5; }
@@ -1601,6 +1607,16 @@ ul { list-style: none; }
 .scen-reassess-label { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
   color:var(--warning); margin-bottom:8px; }
 .scen-reassess-note { font-size:13px; color:var(--text2); line-height:1.5; font-style:italic; margin-top:10px; }
+
+/* Dual reassessment buttons (improving / deteriorating), shown side by side under the vitals
+   on every non-arrest scenario. The examiner taps whichever fits the candidate's performance. */
+.scen-reassess-buttons { display:flex; gap:8px; margin-top:12px; }
+.scen-reassess-buttons .scen-reassess-btn { flex:1; margin-top:0; }
+.scen-reassess-improve.active { background:var(--success); color:#fff; border-color:var(--success); }
+.scen-reassess-decline.active { background:var(--error); color:#fff; border-color:var(--error); }
+.scen-reassess-set { margin-top:10px; }
+.scen-reassess-label-improve { color:var(--success-fg); }
+.scen-reassess-label-decline { color:var(--error); }
 /* A small dot flags a vital that changed from the initial set, so the deterioration or
    response is visible at a glance without colour being the only signal. */
 .scen-vital-changed { color:var(--warning); font-size:10px; vertical-align:middle; margin-left:4px; }

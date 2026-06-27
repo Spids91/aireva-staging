@@ -1,4 +1,4 @@
-const C='aireva-20260626224411';
+const C='aireva-20260627230437';
 const BASE='.';
 // Core assets: cached atomically (install fails if any are missing — they always exist).
 const ASSETS=[BASE+'/',BASE+'/index.html',BASE+'/manifest.json',BASE+'/css/style.css',BASE+'/css/fonts.css',
@@ -8,7 +8,8 @@ const ASSETS=[BASE+'/',BASE+'/index.html',BASE+'/manifest.json',BASE+'/css/style
 // Optional assets: cached best-effort. The font woff2 files may not be present until the
 // one-time install step is run (see css/fonts.css). A missing optional asset must NOT fail
 // the whole install, so these are added individually with failures swallowed.
-const OPTIONAL=[BASE+'/fonts/inter-400.woff2',BASE+'/fonts/inter-500.woff2',BASE+'/fonts/inter-600.woff2',BASE+'/fonts/inter-700.woff2',BASE+'/fonts/inter-800.woff2'];
+const OPTIONAL=[BASE+'/fonts/inter-400.woff2',BASE+'/fonts/inter-500.woff2',BASE+'/fonts/inter-600.woff2',BASE+'/fonts/inter-700.woff2',BASE+'/fonts/inter-800.woff2',
+  BASE+'/icon-192.png',BASE+'/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>
   c.addAll(ASSETS).then(()=>Promise.all(OPTIONAL.map(u=>c.add(u).catch(()=>{}))))
 ));self.skipWaiting();});

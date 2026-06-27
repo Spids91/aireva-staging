@@ -1,4 +1,4 @@
-// ─── QUIZ.JS v0.9.14 ───────────────────────────────────────────────────────────
+// ─── QUIZ.JS v0.9.16 ───────────────────────────────────────────────────────────
 // The entire quiz engine. Modes: daily challenge, standard, adaptive, weak spots,
 // timed, category, spaced repetition, plus the intro quiz. Two answer formats:
 // multiple-choice (auto-marked) and flashcard (self-marked).
@@ -198,15 +198,17 @@ function seededRnd(seed,i) { const x=Math.sin(seed*9301+i*49297+233)*100000; ret
 function makeDailyQs() {
   const seed = dailySeed();
   const qs = [];
+  // The daily challenge is EMT + Paramedic scope only: drop AP-only drugs from the pool
+  // (a drug an EMT or Paramedic could never give shouldn't appear in the everyday challenge).
+  // Drugs shared up the scopes (e.g. EMT,P,AP) stay, since they ARE in Paramedic scope.
+  const dailyPool = MEDS.filter(m => m.scope.includes('EMT') || m.scope.includes('P'));
+  const pool = dailyPool.length ? dailyPool : MEDS;
   for (let i = 0; i < 5; i++) {
-    const d = MEDS[Math.floor(seededRnd(seed,i)*MEDS.length)];
+    const d = pool[Math.floor(seededRnd(seed,i)*pool.length)];
     const qt = EASY_Q[Math.floor(seededRnd(seed,i+100)*EASY_Q.length)];
     const correct = qt.a(d);
-    const correctIdx = MEDS.indexOf(d);
-    // Use the same dedup-aware distractor logic as the main quiz so options are
-    // always distinct (fixes scope questions showing e.g. AP, AP, AP, EMT P AP).
-    // distractors() handles scope specially (returns the other valid scope values)
-    // and dedupes all other question types.
+    // Distractors are still drawn so options stay distinct; distractors() handles scope
+    // questions specially. The full MEDS list is fine as the distractor source.
     const wrong = distractors(qt, d, MEDS);
     const opts = [correct, ...wrong];
     // Seeded shuffle of options

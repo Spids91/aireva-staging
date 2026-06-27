@@ -534,6 +534,62 @@ function renderRevealField(title, blocks, fallbackStr) {
 }
 
 
+// ── DUAL VITALS (improving / deteriorating reassessment) ─────────────────────────
+// Every non-arrest scenario can show two computed reassessment sets in addition to its
+// authored baseline: an IMPROVING set (each abnormal vital nudged back toward its normal
+// range) and a DETERIORATING set (each pushed further from normal, in whatever direction it
+// is already abnormal). The examiner reveals whichever set fits the candidate's performance.
+//
+// The nudge works off the normal range midpoint for the patient's age, so direction is
+// automatic: a value above midpoint improves downward and deteriorates upward, a value below
+// midpoint improves upward and deteriorates downward. Magnitudes are deliberately moderate so
+// the set reads as "5 minutes later", not a different patient. This is a rule-derived default;
+// a specific variant can be overridden later if its trajectory needs to be condition-specific.
+function _nudgeVital(cur, lo, hi, dir, frac) {
+  // dir: +1 = improving (toward normal), -1 = deteriorating (away from normal).
+  const mid = (lo + hi) / 2;
+  const above = cur >= mid;
+  const span = hi - lo || 1;
+  if (dir > 0) {
+    // toward the midpoint by frac of the distance, but never overshoot past mid
+    const next = cur + (mid - cur) * frac;
+    return next;
+  } else {
+    // away from normal: push further in the current abnormal direction by frac of the span
+    return above ? cur + span * frac : cur - span * frac;
+  }
+}
+function computeReassessVitals(v, age, dir) {
+  // dir: +1 improving, -1 deteriorating. Returns a new vitals object shaped like v.
+  const b = scenVitalBand(age);
+  const f = dir > 0 ? 0.45 : 0.40;  // improving pulls a bit harder toward normal
+  // Systolic drives the BP. The diastolic follows the systolic's direction (BP moves as a
+  // unit, both falling in shock or both rising in hypertension) rather than being nudged
+  // independently, which could otherwise show sys and dia diverging.
+  const newSys = _nudgeVital(v.sys, b.bp[0], b.bp[1], dir, f);
+  const sysDelta = newSys - v.sys;
+  const sysFrac = v.sys ? sysDelta / v.sys : 0;          // proportional move
+  const newDia = v.dia * (1 + sysFrac);                   // diastolic tracks the same proportion
+  const r = {
+    hr:   Math.round(_nudgeVital(v.hr,   b.hr[0],   b.hr[1],   dir, f)),
+    rr:   Math.round(_nudgeVital(v.rr,   b.rr[0],   b.rr[1],   dir, f)),
+    spo2: Math.round(_nudgeVital(v.spo2, b.spo2[0], b.spo2[1], dir, f)),
+    sys:  Math.round(newSys),
+    dia:  Math.round(newDia),
+    temp: +(_nudgeVital(v.temp, b.temp[0], b.temp[1], dir, f)).toFixed(1),
+    bgl:  +(_nudgeVital(v.bgl,  b.bgl[0],  b.bgl[1],  dir, f)).toFixed(1),
+  };
+  // Clamp to physically sane bounds so a nudge can't produce an impossible reading.
+  r.spo2 = Math.max(60, Math.min(100, r.spo2));
+  r.hr   = Math.max(20, Math.min(220, r.hr));
+  r.rr   = Math.max(4,  Math.min(60, r.rr));
+  r.sys  = Math.max(50, Math.min(240, r.sys));
+  r.dia  = Math.max(30, Math.min(140, r.dia));
+  r.bgl  = Math.max(1,  Math.min(35, r.bgl));
+  r.temp = Math.max(33, Math.min(42, r.temp));
+  return r;
+}
+
 // ── STATION CARD UI ──────────────────────────────────────────────────────────────
 function renderScenarioCard(sc) {
   if (!sc) return;
@@ -556,6 +612,41 @@ function renderScenarioCard(sc) {
     ['Temperature', `${v.temp}°C`],
   ];
   if (sc.ecg && !sc.arrest) vitalRows.push(['ECG Rhythm', sc.ecg]);
+
+  // Improving / deteriorating reassessment sets (non-arrest only). Each is rendered behind a
+  // button so the examiner can hand the candidate whichever set fits how the station is going.
+  // Changed values are dotted so the trajectory is visible against the baseline.
+  let dualVitalsHtml = '';
+  if (!sc.arrest) {
+    const improved = computeReassessVitals(v, sc.age, +1);
+    const declined = computeReassessVitals(v, sc.age, -1);
+    const reassessRows = (vv) => {
+      const rows = [
+        ['Heart Rate', `${vv.hr} bpm`, vv.hr !== v.hr],
+        ['Resp Rate', `${vv.rr} /min`, vv.rr !== v.rr],
+        ['SpO₂', `${vv.spo2}%`, vv.spo2 !== v.spo2],
+        ['Blood Pressure', `${vv.sys}/${vv.dia} mmHg`, vv.sys !== v.sys || vv.dia !== v.dia],
+        ['BGL', `${vv.bgl} mmol/L`, vv.bgl !== v.bgl],
+        ['Temperature', `${vv.temp}°C`, vv.temp !== v.temp],
+      ];
+      return rows.map(([k, val, changed]) =>
+        `<div class="scen-row"><span class="scen-k">${k}</span><span class="scen-v">${val}${changed ? ' <span class="scen-vital-changed">●</span>' : ''}</span></div>`
+      ).join('');
+    };
+    dualVitalsHtml = `
+      <div class="scen-reassess-buttons">
+        <button class="scen-reassess-btn scen-reassess-improve" id="scenImproveBtn">Show improving vitals</button>
+        <button class="scen-reassess-btn scen-reassess-decline" id="scenDeclineBtn">Show deteriorating vitals</button>
+      </div>
+      <div class="scen-reassess scen-reassess-set" id="scenImproveSet" style="display:none">
+        <div class="scen-reassess-label scen-reassess-label-improve">Improving (5 minutes later)</div>
+        <div class="scen-rows">${reassessRows(improved)}</div>
+      </div>
+      <div class="scen-reassess scen-reassess-set" id="scenDeclineSet" style="display:none">
+        <div class="scen-reassess-label scen-reassess-label-decline">Deteriorating (5 minutes later)</div>
+        <div class="scen-rows">${reassessRows(declined)}</div>
+      </div>`;
+  }
 
   const sampleRows = [
     ['Signs/Symptoms', sc.sample.symptoms],
@@ -658,6 +749,7 @@ function renderScenarioCard(sc) {
       ${sec('Patient', [['Age', sc.age < 1 ? sc.band.label : `${sc.age} years`], ['Sex', sc.sex === 'male' ? 'Male' : 'Female']])}
       <div class="scen-sec"><div class="scen-sec-title">On Arrival</div><div class="scen-dispatch">${sc.presentationText}</div></div>
       ${sec('Vital Signs', vitalRows)}
+      ${dualVitalsHtml}
       ${sec('SAMPLE History', sampleRows)}
       ${opqrst.length ? sec('OPQRST', opqrst) : ''}
       <button class="scen-reveal-btn" id="scenRevealBtn">Reveal Diagnosis &amp; Management</button>
@@ -689,6 +781,26 @@ function renderScenarioCard(sc) {
       haptic();
     });
     document.getElementById('scenNewBtn')?.addEventListener('click', () => { startScenario(); haptic(); });
+    // Improving / deteriorating reassessment reveals. The two are mutually exclusive: showing
+    // one hides the other (they're alternative outcomes, never both at once). Tapping the active
+    // button again hides it.
+    const impBtn = document.getElementById('scenImproveBtn'), impSet = document.getElementById('scenImproveSet');
+    const decBtn = document.getElementById('scenDeclineBtn'), decSet = document.getElementById('scenDeclineSet');
+    if (impBtn && impSet && decBtn && decSet) {
+      const setShown = (whichSet, whichBtn, otherSet, otherBtn, showLabel, hideLabel, otherShowLabel) => {
+        const open = whichSet.style.display !== 'none';
+        whichSet.style.display = open ? 'none' : 'block';
+        whichBtn.textContent = open ? showLabel : hideLabel;
+        whichBtn.classList.toggle('active', !open);
+        otherSet.style.display = 'none';
+        otherBtn.textContent = otherShowLabel;
+        otherBtn.classList.remove('active');
+        if (!open) requestAnimationFrame(() => whichSet.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+        haptic();
+      };
+      impBtn.addEventListener('click', () => setShown(impSet, impBtn, decSet, decBtn, 'Show improving vitals', 'Hide improving vitals', 'Show deteriorating vitals'));
+      decBtn.addEventListener('click', () => setShown(decSet, decBtn, impSet, impBtn, 'Show deteriorating vitals', 'Hide deteriorating vitals', 'Show improving vitals'));
+    }
     const seedBtn = document.getElementById('scenSeedBtn');
     if (seedBtn) seedBtn.addEventListener('click', () => {
       const code = sc.seedCode;
