@@ -581,13 +581,13 @@ function computeReassessVitals(v, age, dir) {
     bgl:  +(_nudgeVital(v.bgl,  b.bgl[0],  b.bgl[1],  dir, f)).toFixed(1),
   };
   // Clamp to physically sane bounds so a nudge can't produce an impossible reading.
-  r.spo2 = Math.max(60, Math.min(100, r.spo2));
+  r.spo2 = Math.max(68, Math.min(100, r.spo2));
   r.hr   = Math.max(20, Math.min(220, r.hr));
   r.rr   = Math.max(4,  Math.min(60, r.rr));
   r.sys  = Math.max(50, Math.min(240, r.sys));
   r.dia  = Math.max(30, Math.min(140, r.dia));
   r.bgl  = Math.max(1,  Math.min(35, r.bgl));
-  r.temp = Math.max(33, Math.min(42, r.temp));
+  r.temp = Math.max(24, Math.min(42, r.temp));  // floor low enough for severe hypothermia
   return r;
 }
 
@@ -710,7 +710,24 @@ function renderScenarioCard(sc) {
     const note = v.note ? `<span class="scen-dose-note">${escapeHtml(v.note)}</span>` : '';
     return `${lead}${body}${note}`;
   }
-  const drugLines = (p.reveal.drugs || []).map(dr => {
+  // For the Environmental Emergency presentation, the reveal data covers four distinct
+  // conditions (hypothermia / heat / drowning / decompression illness), each block tagged with
+  // an `env` key. Filter the reveal down to the patient's ACTUAL condition so, e.g., a
+  // hypothermia patient is not shown decompression-illness or drowning management. Blocks with
+  // no `env` tag are universal and always kept. Non-environmental presentations have no tags,
+  // so this is a no-op for them.
+  const envOf = (cause) => {
+    const c = String(cause || '').toLowerCase();
+    if (c.includes('hypotherm')) return 'hypo';
+    if (c.includes('heat')) return 'heat';
+    if (c.includes('drown') || c.includes('submersion')) return 'drown';
+    if (c.includes('decompression')) return 'dci';
+    return null;
+  };
+  const envTag = p.id === 'environmental' ? envOf(sc.variant && sc.variant.cause) : null;
+  const envFilter = (arr) => !envTag ? arr : (arr || []).filter(b => !b.env || b.env === envTag);
+
+  const drugLines = envFilter(p.reveal.drugs || []).map(dr => {
     const d = isAdult ? (dr.adult || dr) : (dr.paed || dr);
     // paramedic route shown as the main line; ap route (if any) as the amber pill.
     // Some drugs are AP-only (no paramedic route) — show just the name + AP pill,
@@ -755,9 +772,9 @@ function renderScenarioCard(sc) {
       ${opqrst.length ? sec('OPQRST', opqrst) : ''}
       <button class="scen-reveal-btn" id="scenRevealBtn">Reveal Diagnosis &amp; Management</button>
       <div class="scen-reveal" id="scenReveal" style="display:none">
-        ${renderRevealField('Diagnosis', p.reveal.diagnosisBlocks, p.reveal.diagnosis)}
-        ${renderRevealField('Pathway', p.reveal.pathwayBlocks, p.reveal.pathway)}
-        ${renderRevealField('Interventions', p.reveal.interventionsBlocks, p.reveal.interventions)}
+        ${renderRevealField('Diagnosis', envFilter(p.reveal.diagnosisBlocks), p.reveal.diagnosis)}
+        ${renderRevealField('Pathway', envFilter(p.reveal.pathwayBlocks), p.reveal.pathway)}
+        ${renderRevealField('Interventions', envFilter(p.reveal.interventionsBlocks), p.reveal.interventions)}
         <div class="scen-sec"><div class="scen-sec-title">Drugs &amp; Doses (Paramedic scope)</div><ul class="scen-drugs">${drugLines}</ul></div>
         <div class="scen-disclaimer">For study practice only, not a clinical reference. Generated vital signs are for practice and may not be physiologically exact. Always follow current clinical practice guidelines.</div>
       </div>
